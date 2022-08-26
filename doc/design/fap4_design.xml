@@ -1,0 +1,91 @@
+<?xml version="1.0" ?>
+
+<!DOCTYPE article SYSTEM "/usr/share/sgml/docbook/dtd/xml/4.5/docbookx.dtd">
+
+
+<article status="draft" class="specification"> <title>Discrete Events Dynamics System (DEDS) native framework. Design.</title>
+
+    <articleinfo>
+	<author><personname><firstname>Yuri</firstname><surname>Borisov</surname></personname>
+	    <email>yuri.borisov.v@gmail.com</email></author> 
+
+	<releaseinfo>Ver.0.01 at 23-Aug-2022</releaseinfo>
+
+	<abstract>
+	    <simpara>This document collects software desing for DEDS native framework.</simpara>
+	</abstract>
+
+	<revhistory>
+	    <revision> <revnumber>0.01</revnumber> <date>23-Aug-2022</date> <authorinitials>Yuri Borisov</authorinitials>
+		<revremark>Initial version</revremark> </revision>
+	</revhistory>
+
+    </articleinfo>
+
+    <bibliolist>
+	<title>References</title>
+
+	<biblioentry id="ref_incr_mut"> <abbrev>INCR_MUT</abbrev>
+	    <productname><ulink url="../../../fap-doc/doc_incr_syst_creation/index.html "/></productname>
+	    <title>Y.Borisov. Using incremental mutation process for systems modeling</title> </biblioentry>
+    </bibliolist>
+
+    <glossary> <title>Glossary</title> 
+
+	<glossentry id="gls_cp"><glossterm>CP</glossterm> <acronym>CP</acronym>
+	    <glossdef> <para>Connection Point. Element that is used as endpoint of connections between systems. </para></glossdef>
+	</glossentry>
+
+	<glossentry id="gls_deds"><glossterm>DEDS</glossterm> <acronym>DEDS</acronym>
+	    <glossdef> <para>
+		Discrete Event Dynamic System,  a discrete-state, event-driven system of which the state evolution depends entirely
+		on the occurrence of asynchronous discrete events over time. Although similar to continuous-variable dynamic systems (CVDS),
+			DEDS consists solely of discrete state spaces and event-driven state transition mechanisms.  Ref
+		    <ulink url="https://en.wikipedia.org/wiki/Discrete_event_dynamic_system"/></para>
+		<glossseealso otherterm="gls_des"/> </glossdef>
+	</glossentry>
+
+	<glossentry id="gls_des"><glossterm>DES</glossterm> <acronym>DES</acronym>
+	    <glossdef> <para>
+		Discrete-Event Simulation - model of the operation of a system as a discrete sequence of events in time.
+		Each event occurs at a particular instant in time and marks a change of state in the system. Ref
+		    <ulink url="https://en.wikipedia.org/wiki/Discrete-event_simulation"/></para> <glossseealso otherterm="gls_deds"/>
+		<para>Also this abbreviation is designates Discrete Event System, the implementation of discrete-event simulation.</para>
+	    </glossdef>
+	</glossentry>
+
+	<glossentry id="gls_fap2"><glossterm>FAP2</glossterm> <acronym>FAP2</acronym>
+	    <glossdef> <para>
+		Discrete Events System (DES) framework ver. 2 aka "grayb". Ref
+		    <ulink url="../../../grayb/doc/design/index.html"/> </para></glossdef>
+	</glossentry>
+
+	<glossentry id="gls_irm"><glossterm>IRM</glossterm>
+	    <glossdef> <para>Interface resolution mechanism.  <ulink url="../../../grayb/doc/design/index.htmds_ifcache"/>
+	</para></glossdef> </glossentry>
+
+    </glossary>
+
+    <sect1 id="ds_itr"><title>Intro</title>
+	<sect2 id="ds_itr_sp"><title>The scope of the project</title>
+	    <simpara>
+		This project is focusing on re-desing of DES framework fap3, ref
+		<ulink url="../../../fap3/doc/design/index.html"/> for the desing.
+		    The main idea of the re-desing is to use also DEDS (but low-level) to create high-level DEDS, ref
+		<ulink url="../../../fap3/doc/design/index.html#ds_ndes"/>
+		    for the idea intro.
+	    </simpara>
+	    <simpara>When fap3 desing atomic elements are interfaces (C++), in ndeds such elements are connection points. Interfaces
+		are also used but on ndeds lower level and are just simple interfaces (fap3 interfaces are not lightweight).
+		Also <xref linkend="gls_irm"/> is not used.</simpara>
+	</sect2>
+	<sect2 id="ds_itr_dp"><title>Dependent projects</title>
+	    <sect3 id="ds_itr_dp_fap3"><title>DES framework fap3, ref <ulink url="../../../fap3/doc/design/index.html"/></title>
+	    </sect3>
+	</sect2>
+    </sect1>
+
+
+
+</article>
+
