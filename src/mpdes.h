@@ -36,7 +36,8 @@ class MDesStateData
 {
     public:
 	/** @brief Provides state's data */
-	virtual void getData(T& aData) = 0;
+//	virtual void getData(T& aData) = 0;
+	virtual const T* sData() const = 0;
 };
 
 

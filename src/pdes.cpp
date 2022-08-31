@@ -39,7 +39,8 @@ void PDesBase::setUpdated()
 
 void PStateBase::update() {
     mActNotified = false;
-    if (doTrans()) {
+    doTrans();
+    if (isChanged()) {
 	setUpdated();
     }
 }

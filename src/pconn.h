@@ -2,21 +2,39 @@
 #ifndef __NDEDS_PCONN_H
 #define __NDEDS_PCONN_H
 
+/** @brief Primary layer connection points
+ * */
+
 #include <set>
 
 #include <assert.h>
 
-/** @brief Primary connection point interface
+
+/** @brief EXPERIMENTAL. Primary connection point base interface
+ * */
+class MPcb
+{
+    public:
+	virtual bool connect(MPcb* aPair) = 0;
+	virtual bool disconnect(MPcb* aPair) = 0;
+};
+
+
+/** @brief Primary connection point interface specifying complementary pair of OOP ifaces
  * @tparam  TPif  provided interface
  * @tparam  TRif  required interface
  * */
 template <class TPif, class TRif>
-class MPc
+class MPc : public MPcb
 {
     public:
 	using TSelf = MPc<TPif, TRif>;
 	using TPair = MPc<TRif, TPif>;
 	virtual ~MPc() = default;
+	// ??? From MPcb
+	virtual bool connect(MPcb* aPair) { return connect(static_cast<TPair*>(aPair)); }
+	virtual bool disconnect(MPcb* aPair)  { return disconnect(static_cast<TPair*>(aPair)); }
+	// Local
 	virtual TPif* provided() = 0;
 	virtual const TPif* provided() const = 0;
 	virtual bool connect(TPair* aPair) = 0;
@@ -60,7 +78,9 @@ class PCpOnp : public MPc<TPif, TRif>
 	virtual int pcount() const override { return mPair ? 1 : 0; }
     public:
 	TRif* required() { return mPair ?  mPair->provided() : nullptr; }
-    protected:
+	const TRif* required()  const { return mPair ?  mPair->provided() : nullptr; }
+    //!!protected:
+    public:
 	TPair* mPair;
 	TPif* mPx;
 };
@@ -211,6 +231,27 @@ class PExtd : public PCpOmnp<TPif, TRif>
 	PExtd(): PCpOmnp<TPif, TRif>(*mInt), mInt(this) {}
     public:
 	TInt mInt;
+};
+
+
+/** @brief Primary DEDS. Socket, one-to-one, no Id
+ * */
+template <class TPif, class TRif>
+class PSockOnp: public PCpOnp <TPif, TRif>
+{
+    public:
+	using TPair= typename MPc<TPif, TRif>::TPair;
+	using TParent= PCpOnp <TPif, TRif>;
+
+	PSockOnp(TPif* aPx): PCpOnp<TPif, TRif>(aPx) {}
+	bool connect(TPair* aPair) override {
+	    PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
+	    return  TParent::mPx->connect(*pair->mPx) ? PCpOnp <TPif, TRif>::connect(aPair) : false;
+	}
+	bool disconnect(TPair* aPair) override {
+	    PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
+	    return  TParent::mPx->disconnect(*pair->mPx) ? PCpOnp <TPif, TRif>::disconnect(aPair) : false;
+	}
 };
 
 #endif

@@ -2,5 +2,5 @@
 Discrete Events Dynamics System (DEDS) framework, ver.4
 
 The framework is the base of implementing DEDS modelling systems.
-Framework ver.4 is based on primary DEDS framework instead of direct implementation in ver.3
+Framework ver.4 is based on primary DEDS framework instead of direct implementation in ver.3.
 Refer to fap3 design #ds_ndes section for the design origination.
