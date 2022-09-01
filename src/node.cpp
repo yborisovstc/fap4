@@ -7,14 +7,15 @@
 
 Node::Node(const std::string& aName): PDes(),
     /*mCpOwned(), mCpOwning(),*/
-    mCpOwned2(&mOwned2), mCpOwning2(&mOwning2),
+    /*mCpOwned2(&mOwned2), mCpOwning2(&mOwning2),*/
+    mCpOwned3(&mOwned2), mCpOwning3(&mOwning2),
     mCpNode(&mNode), mNode(mUri.mOcp), mOwning(mUri.mOcp), 
     mOwningUri([&]() { mOwningUri.mRes.mData = mOwningUri.Inp1.data() + mOwningUri.Inp2.data(); }),
     tOwnedId([](){})
 {
     mBcp.connect(&sName.mScp);
-    mOwningUri.Inp2.connect(&sName.mOcp);
-    mOwningUriTr.Inp2.connect(&sName.mOcp);
+    sName.set(aName);
+    //mOwningUri.Inp2.connect(&sName.mOcp);
     /*
     // Owned CP
     mCpOwned.mId = &sName.mOcp;
@@ -29,4 +30,7 @@ Node::Node(const std::string& aName): PDes(),
     // Owning CP
     mOwning2.mId = &tOwnedId.Inp1;
     mOwning2.mUri = &mOwningUriTr.mOcp;
+    // Owning Uri
+    mOwningUriTr.Inp2.connect(&sName.mOcp);
+    mOwningUriTr.Inp3.connect(&mCpOwned3.oConnected);
 }

@@ -68,7 +68,7 @@ struct PDd
     PDd() : mValid(false) {}
     PDd(const PDd& aSrc): mData(aSrc.mData), mValid(aSrc.mValid) {}
     PDd(const T& aData, bool aValid = true): mData(aData), mValid(aValid) {}
-    bool operator =(const PDd<T>& s) { return mValid && s.mValid && (mData == s.mData) || !mValid && !s.mValid;}
+    bool operator ==(const PDd<T>& s) { return mValid && s.mValid && (mData == s.mData) || !mValid && !s.mValid;}
     bool operator !=(const PDd<T>& s) { return mValid && s.mValid && (mData != s.mData) || mValid != s.mValid;}
 };
 
@@ -371,6 +371,17 @@ class PTrans2 : public PTrans<TData>
 	PsIcp<TInp1> Inp1;
 	PsIcp<TInp2> Inp2;
 };
+
+template <typename TData, typename TInp1, typename TInp2, typename TInp3>
+class PTrans3 : public PTrans<TData>
+{
+    public:
+	PTrans3(): PTrans<TData>(), Inp1(this), Inp2(this), Inp3(this) {}
+	PsIcp<TInp1> Inp1;
+	PsIcp<TInp2> Inp2;
+	PsIcp<TInp3> Inp3;
+};
+
 
 template <typename TData, typename TInp1>
 class PTransl1 : public PTrans<TData>

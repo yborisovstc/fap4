@@ -4,12 +4,15 @@
 
 /** @brief Primary layer connection points
  * */
+// TODO To avoid mixing of compile-time and run-time polymorphisms
+// Redesign for compile-time pm
 
 #include <set>
 
 #include <assert.h>
 
 
+#if 0
 /** @brief EXPERIMENTAL. Primary connection point base interface
  * */
 class MPcb
@@ -18,6 +21,7 @@ class MPcb
 	virtual bool connect(MPcb* aPair) = 0;
 	virtual bool disconnect(MPcb* aPair) = 0;
 };
+#endif
 
 
 /** @brief Primary connection point interface specifying complementary pair of OOP ifaces
@@ -25,20 +29,24 @@ class MPcb
  * @tparam  TRif  required interface
  * */
 template <class TPif, class TRif>
-class MPc : public MPcb
+class MPc /* : public MPcb*/
 {
     public:
 	using TSelf = MPc<TPif, TRif>;
 	using TPair = MPc<TRif, TPif>;
 	virtual ~MPc() = default;
+	virtual bool connect(TPair* aPair);
+	virtual bool disconnect(TPair* aPair);
 	// ??? From MPcb
-	virtual bool connect(MPcb* aPair) { return connect(static_cast<TPair*>(aPair)); }
-	virtual bool disconnect(MPcb* aPair)  { return disconnect(static_cast<TPair*>(aPair)); }
+	//virtual bool connect(MPcb* aPair) { return connect(static_cast<TPair*>(aPair)); }
+	//virtual bool disconnect(MPcb* aPair)  { return disconnect(static_cast<TPair*>(aPair)); }
 	// Local
 	virtual TPif* provided() = 0;
 	virtual const TPif* provided() const = 0;
+	/*
 	virtual bool connect(TPair* aPair) = 0;
 	virtual bool disconnect(TPair* aPair) = 0;
+	*/
 	virtual bool disconnect() = 0;
 	virtual bool isPair(TPair* aPair) const = 0;
 	virtual bool attach(TPair* aPair) = 0;
@@ -46,6 +54,31 @@ class MPc : public MPcb
 	/** @brief Gets pairs count */
 	virtual int pcount() const = 0;
 };
+
+    template <class TPif, class TRif>
+bool MPc<TPif, TRif>::connect(TPair* aPair)
+{
+    assert(aPair && !aPair->isPair(this) && !isPair(aPair));
+    bool res = aPair->attach(this);
+    if (res) {
+	res = attach(aPair);
+    }
+    return res;
+}
+
+template <class TPif, class TRif>
+bool MPc<TPif, TRif>::disconnect(TPair* aPair)
+{
+    assert(aPair && aPair->isPair(this) && isPair(aPair));
+    bool res = aPair->detach(this);
+    if (res) {
+	res = detach(aPair);
+    }
+    return res;
+}
+
+
+
 
 /** @brief Native connection point, one-to-one, no Id, proxy
  * @tparam TPif  type of provided interface
@@ -64,13 +97,15 @@ class PCpOnp : public MPc<TPif, TRif>
 	virtual ~PCpOnp() { disconnect(); }
 	virtual TPif* provided() override { return mPx;}
 	virtual const TPif* provided() const override { return mPx;}
+	/*
 	virtual bool connect(TPair* aPair) override ;
+	virtual bool disconnect(TPair* aPair) override;
+	*/
 	virtual bool disconnect() override {
 	    bool res = true;
-	    if (mPair) res = disconnect(mPair);
+	    if (mPair) res = MPc<TPif, TRif>::disconnect(mPair);
 	    return res;
 	}
-	virtual bool disconnect(TPair* aPair) override;
 	virtual bool attach(TPair* aPair) override;
 	virtual bool detach(TPair* aPair) override;
 	virtual bool isPair(TPair* aPair) const override { return mPair && mPair == aPair; }
@@ -101,6 +136,7 @@ bool PCpOnp<TPif, TRif>::detach(TPair* aPair)
     return true;
 }
 
+/*
 template <class TPif, class TRif>
 bool PCpOnp<TPif, TRif>::connect(TPair* aPair)
 {
@@ -122,6 +158,7 @@ bool PCpOnp<TPif, TRif>::disconnect(TPair* aPair)
     }
     return res;
 }
+*/
 
 
 
@@ -142,17 +179,19 @@ class PCpOmnp: public MPc<TPif, TRif>
 	using iterator = typename TPairs::iterator;
     public:
 	PCpOmnp(TPif* aPx): mPx(aPx) {}
-	virtual ~PCpOmnp() { disconnect(); }
+	virtual ~PCpOmnp() { PCpOmnp<TPif, TRif>::disconnect(); }
 	virtual TPif* provided() override { return mPx;}
 	virtual const TPif* provided() const override { return mPx;}
+	/*
 	virtual bool connect(TPair* aPair) override ;
+	virtual bool disconnect(TPair* aPair) override;
+	*/
 	virtual bool attach(TPair* aPair) override;
 	virtual bool detach(TPair* aPair) override;
-	virtual bool disconnect(TPair* aPair) override;
 	virtual bool disconnect() override {
 	    bool res = true;
 	    while (res && begin() != end()) {
-		res = disconnect(*begin());
+		res = MPc<TPif, TRif>::disconnect(*begin());
 	    }
 	    return res;
 	}
@@ -184,6 +223,7 @@ bool PCpOmnp<TPif, TRif>::detach(TPair* aPair)
     return true;
 }
 
+/*
     template <class TPif, class TRif>
 bool PCpOmnp<TPif, TRif>::connect(TPair* aPair)
 {
@@ -206,6 +246,7 @@ bool PCpOmnp<TPif, TRif>::disconnect(TPair* aPair)
     assert(res);
     return res;
 }
+*/
 
 template <class TPif, class TRif>
 bool PCpOmnp<TPif, TRif>::isPair(TPair* aPair) const
@@ -244,13 +285,13 @@ class PSockOnp: public PCpOnp <TPif, TRif>
 	using TParent= PCpOnp <TPif, TRif>;
 
 	PSockOnp(TPif* aPx): PCpOnp<TPif, TRif>(aPx) {}
-	bool connect(TPair* aPair) override {
+	bool attach(TPair* aPair) override {
 	    PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
-	    return  TParent::mPx->connect(*pair->mPx) ? PCpOnp <TPif, TRif>::connect(aPair) : false;
+	    return  TParent::mPx->attach(*pair->mPx) ? PCpOnp <TPif, TRif>::attach(aPair) : false;
 	}
-	bool disconnect(TPair* aPair) override {
+	bool detach(TPair* aPair) override {
 	    PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
-	    return  TParent::mPx->disconnect(*pair->mPx) ? PCpOnp <TPif, TRif>::disconnect(aPair) : false;
+	    return  TParent::mPx->detach(*pair->mPx) ? PCpOnp <TPif, TRif>::detach(aPair) : false;
 	}
 };
 

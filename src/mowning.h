@@ -31,6 +31,7 @@ class MOwned : public MIface
 	using TCp =  MPc<MOwned, MOwner>;
 };
 
+#if 0
 struct MNOwned;
 
 struct MNOwner : public MPcb
@@ -55,6 +56,7 @@ bool MNOwner::connect(MPcb* aPair) {
     res &= mId.connect(&pair->mId);
     return res;
 }	
+#endif
 
 
 
@@ -77,14 +79,14 @@ template <typename P = tag_outp, typename Q = tag_inp> struct TOwner {
 template <typename P = tag_outp, typename Q = tag_inp>
 struct MNnOwning {
     using TPair = MNnOwning<Q,P>;
-    bool connect(TPair& aPair) {
+    bool attach(TPair& aPair) {
 	bool res = true;
-	res &= mUri->connect(aPair.mUri);
+	res &= mUri->attach(aPair.mUri);
 	return res;
     }
-    bool disconnect(TPair& aPair) {
+    bool detach(TPair& aPair) {
 	bool res = true;
-	res &= mUri->disconnect(aPair.mUri);
+	res &= mUri->detach(aPair.mUri);
 	return res;
     }
 

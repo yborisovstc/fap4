@@ -32,8 +32,17 @@ class Node: public PDes
 	Owned mOwned;
 	Owning mOwning;
 	Nnode mNode;
-	class TOwningUri : public PTrans2<GUri, GUri, std::string> {
-	    void doTrans() override { mRes.mData = Inp1.data() + Inp2.data(); }
+	class TOwningUri : public PTrans3<GUri, GUri, std::string, bool> {
+	    void doTrans() override {
+		mRes.mValid = Inp2.valid() && Inp3.valid();
+		if (mRes.mValid) {
+		    if (Inp3.data()) {
+			mRes.mValid &= Inp1.valid();
+			mRes.mData = Inp1.data() + Inp2.data();
+		    } else
+			mRes.mData = Inp2.data();
+		}
+	    }
 	};
 	MNnOwning<> mOwning2;
 	MNnOwning<>::TPair mOwned2;
@@ -45,8 +54,10 @@ class Node: public PDes
 	//TOwner<tag_outp, tag_inp> mCpOwning;
 	//TOwner<tag_inp, tag_outp> mCpOwned;
 	//MNCp<MNnOwning> mCpOwning2;
-	PSockOnp<MNnOwning<>, MNnOwning<>::TPair> mCpOwning2;
-	PSockOnp<MNnOwning<>::TPair, MNnOwning<>> mCpOwned2;
+	//PSockOnp<MNnOwning<>, MNnOwning<>::TPair> mCpOwning2;
+	//PSockOnp<MNnOwning<>::TPair, MNnOwning<>> mCpOwned2;
+	MNCp2<MNnOwning<>> mCpOwning3;
+	MNCp2<MNnOwning<>::TPair> mCpOwned3;
     private:
 	PState<GUri> mUri;
 	PTransl2<GUri, GUri, std::string> mOwningUri;

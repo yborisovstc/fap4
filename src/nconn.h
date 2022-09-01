@@ -59,9 +59,40 @@ struct MNCp: public PState<MNCp<T>*>
 /** @brief Native connpoint base, PState socket based
  * Output added to expose parent ptr
  * */
-template <class TPif, class TRif>
-struct MNCp2: public PSockOnp<TPif, TRif>
+template <class TPif, class TRif = typename TPif::TPair>
+struct MNCp2: public PSockOnp<TPif, TRif>, public MDesStateData<PDd<bool>>
 {
+    using TSelf = MNCp2<TPif, TRif>;
+    using TParent = PSockOnp<TPif, TRif>;
+
+    MNCp2(TPif* aPx): PSockOnp<TPif, TRif>(aPx) {}
+    void notifyConnUpdated() {
+	for (auto it = oConnected.begin(); it != oConnected.end(); it++) {
+	    (*it)->provided()->onInpUpdated();
+	}
+    }
+    // From MDesStateData
+    const PsOcp<bool>::TSData* sData() const override { return &mConnected;}
+    // From PSockOnp
+    bool attach(typename TParent::TPair* aPair) override {
+	bool res = PSockOnp<TPif, TRif>::attach(aPair);
+	if (res && !mConnected.mData) {
+	    mConnected = {true, true};
+	    notifyConnUpdated();
+	}
+	return res;
+    }
+    bool detach(typename TParent::TPair* aPair) override {
+	bool res = PSockOnp<TPif, TRif>::detach(aPair);
+	if (res && mConnected.mData) {
+	    mConnected = {false, true};
+	    notifyConnUpdated();
+	}
+	return res;
+    }
+
+    PsOcp<bool>::TSData mConnected{ false, true};
+    PsOcp<bool> oConnected{this};
 };
 
 
