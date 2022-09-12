@@ -9,6 +9,7 @@
 
 #include "mpdes.h"
 #include "pconn.h"
+//#include "pconn2.h"
 
 
 /** @brief Primary DEDS base
@@ -82,6 +83,7 @@ template <typename T> using MPsOutp = MPc<MDesStateData<PDd<T>>, MDesInpObserver
 template <typename T> using MPsInp = PCpOnp<MDesInpObserver, MDesStateData<PDd<T>>>;
 
 
+// TODO Needs to introdice the notification of inp observer of CP connect/disconnect
 /** @brief Primary DEDS State input CP
  * */
 template <typename TInp>

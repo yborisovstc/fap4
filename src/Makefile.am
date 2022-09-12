@@ -10,6 +10,8 @@ libfap4_la_SOURCES = \
 		       mnode.h \
 		       mowning.h \
 		       pconn.h \
+		       pconn2.h \
+		       pconn2.cpp \
 		       nconn.h \
 		       guri.h \
 		       guri.cpp \

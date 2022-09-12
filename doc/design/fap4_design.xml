@@ -69,9 +69,9 @@
     <sect1 id="ds_itr"><title>Intro</title>
 	<sect2 id="ds_itr_sp"><title>The scope of the project</title>
 	    <simpara>
-		This project is focusing on re-desing of DES framework fap3, ref
-		<ulink url="../../../fap3/doc/design/index.html"/> for the desing.
-		    The main idea of the re-desing is to use also DEDS (but low-level) to create high-level DEDS, ref
+		This project is focusing on re-design of DES framework fap3, ref
+		<ulink url="../../../fap3/doc/design/index.html"/>.
+		    The main idea of the re-design is to use also DEDS (but lower-level, also called primary level) to create high-level DEDS, ref
 		<ulink url="../../../fap3/doc/design/index.html#ds_ndes"/>
 		    for the idea intro.
 	    </simpara>
@@ -82,6 +82,31 @@
 	<sect2 id="ds_itr_dp"><title>Dependent projects</title>
 	    <sect3 id="ds_itr_dp_fap3"><title>DES framework fap3, ref <ulink url="../../../fap3/doc/design/index.html"/></title>
 	    </sect3>
+	</sect2>
+    </sect1>
+
+    <sect1 id="ds_pcp"><title>Primary connection points.</title>
+	<sect2><title>Intro </title>
+	    <simpara>
+		Primary CP is the key part of primary DEDS. CPs is the backbone of DEDS. CPs create treeish topology with root CP exposing provided iface
+		and the leafs representing required iface. This is the reason why this tree traversal effectiveness is so important, ref 
+		<xref linkend="ds_pcp_rsi"/> for details.
+	    </simpara>
+	</sect2>
+	<sect2 id="ds_pcp_rsi"><title>Resolving ifaces</title>
+	    <simpara>
+		The primary DEDS topology for upper-level DEDS (defined by DSL) seems has be tree-ish but not primitive. In DSL DEDS (ref fap3) the problem
+		of getting the required ifaces from CP was solved by introducing
+		<xref linkend="gls_irm"/>. This mechanism seems redundant for primary DEDS so we
+		    can try to avoid using it and implement just effective ifaces pass algorithm instead.
+	    </simpara>
+	    <simpara>Ifaces pass algorithm is already used in <xref linkend="gls_irm"/>, ref fap3 IfrNode::nextLeaf() that actually uses
+		native CP method nextLeaf(). This method helps to perform tree traversal.</simpara>
+	</sect2>
+	<sect2><title>Desing: can homogeneous tree be used?</title>
+	    <simpara>In fap3 the native CPs tree is geterogeneous - it combines separate types of CPs that nevetheless have same base.
+		For instance tree node NTnnp (based on one-to-one CP NCpOnp) binded CP (one-to-many NCpOmnp) can connect to another NTnnp or one-to-many
+		NCpOmnp. This works because NCpOmnp uses container of pointers to CPs base MNcpp.</simpara>
 	</sect2>
     </sect1>
 

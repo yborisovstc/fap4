@@ -1,27 +1,11 @@
 
-#ifndef __NDEDS_PCONN_H
-#define __NDEDS_PCONN_H
-
-/** @brief Primary layer connection points
- * */
-// TODO To avoid mixing of compile-time and run-time polymorphisms
-// Redesign for compile-time pm
+#ifndef __NDEDS_PCONN2_H
+#define __NDEDS_PCONN2_H
 
 #include <set>
 
 #include <assert.h>
 
-
-#if 0
-/** @brief EXPERIMENTAL. Primary connection point base interface
- * */
-class MPcb
-{
-    public:
-	virtual bool connect(MPcb* aPair) = 0;
-	virtual bool disconnect(MPcb* aPair) = 0;
-};
-#endif
 
 
 /** @brief Primary connection point interface specifying complementary pair of OOP ifaces
@@ -29,24 +13,17 @@ class MPcb
  * @tparam  TRif  required interface
  * */
 template <class TPif, class TRif>
-class MPc /* : public MPcb*/
+class MPc
 {
     public:
 	using TSelf = MPc<TPif, TRif>;
 	using TPair = MPc<TRif, TPif>;
 	virtual ~MPc() = default;
-	virtual bool connect(TPair* aPair);
-	virtual bool disconnect(TPair* aPair);
-	// ??? From MPcb
-	//virtual bool connect(MPcb* aPair) { return connect(static_cast<TPair*>(aPair)); }
-	//virtual bool disconnect(MPcb* aPair)  { return disconnect(static_cast<TPair*>(aPair)); }
+	bool connect(TPair* aPair);
+	bool disconnect(TPair* aPair);
 	// Local
 	virtual TPif* provided() = 0;
 	virtual const TPif* provided() const = 0;
-	/*
-	virtual bool connect(TPair* aPair) = 0;
-	virtual bool disconnect(TPair* aPair) = 0;
-	*/
 	virtual bool disconnect() = 0;
 	virtual bool isPair(TPair* aPair) const = 0;
 	virtual bool attach(TPair* aPair) = 0;
@@ -84,7 +61,6 @@ class MPc /* : public MPcb*/
 	    }
 	    return res;
 	}
-
 };
 
     template <class TPif, class TRif>
@@ -129,10 +105,6 @@ class PCpOnp : public MPc<TPif, TRif>
 	virtual ~PCpOnp() { disconnect(); }
 	virtual TPif* provided() override { return mPx;}
 	virtual const TPif* provided() const override { return mPx;}
-	/*
-	virtual bool connect(TPair* aPair) override ;
-	virtual bool disconnect(TPair* aPair) override;
-	*/
 	virtual bool disconnect() override {
 	    bool res = true;
 	    if (mPair) res = MPc<TPif, TRif>::disconnect(mPair);
@@ -170,30 +142,6 @@ bool PCpOnp<TPif, TRif>::detach(TPair* aPair)
     return true;
 }
 
-/*
-template <class TPif, class TRif>
-bool PCpOnp<TPif, TRif>::connect(TPair* aPair)
-{
-    assert(aPair && !aPair->isPair(this) && !isPair(aPair));
-    bool res = aPair->attach(this);
-    if (res) {
-	res = attach(aPair);
-    }
-    return res;
-}
-
-template <class TPif, class TRif>
-bool PCpOnp<TPif, TRif>::disconnect(TPair* aPair)
-{
-    assert(aPair && aPair->isPair(this) && isPair(aPair));
-    bool res = aPair->detach(this);
-    if (res) {
-	res = detach(aPair);
-    }
-    return res;
-}
-*/
-
 
 
 
@@ -216,10 +164,6 @@ class PCpOmnp: public MPc<TPif, TRif>
 	virtual ~PCpOmnp() { PCpOmnp<TPif, TRif>::disconnect(); }
 	virtual TPif* provided() override { return mPx;}
 	virtual const TPif* provided() const override { return mPx;}
-	/*
-	virtual bool connect(TPair* aPair) override ;
-	virtual bool disconnect(TPair* aPair) override;
-	*/
 	virtual bool attach(TPair* aPair) override;
 	virtual bool detach(TPair* aPair) override;
 	virtual bool disconnect() override {
@@ -263,31 +207,6 @@ bool PCpOmnp<TPif, TRif>::detach(TPair* aPair)
     return true;
 }
 
-/*
-    template <class TPif, class TRif>
-bool PCpOmnp<TPif, TRif>::connect(TPair* aPair)
-{
-    assert(aPair && !aPair->isPair(this) && !isPair(aPair));
-    bool res = aPair->attach(this);
-    if (res) {
-	res = attach(aPair);
-    }
-    return res;
-}
-
-    template <class TPif, class TRif>
-bool PCpOmnp<TPif, TRif>::disconnect(TPair* aPair)
-{
-    assert(aPair && aPair->isPair(this) && isPair(aPair));
-    bool res = aPair->detach(this);
-    if (res) {
-	res = detach(aPair);
-    }
-    assert(res);
-    return res;
-}
-*/
-
 template <class TPif, class TRif>
 bool PCpOmnp<TPif, TRif>::isPair(TPair* aPair) const
 {
@@ -295,46 +214,10 @@ bool PCpOmnp<TPif, TRif>::isPair(TPair* aPair) const
 }
 
 
-/** @brief Primary net tree node
+
+/** @brief Extender, proxied
  * */
-template <class TProv, class TReq>
-class PTnnp : public PCpOnp<TProv, TReq>
-{
-    public:
-	using TScp = PCpOnp<TProv, TReq>;  /*!< Self connpoint type */
-	using TPair = typename TScp::TPair;
-	using TNodeIf = MPc<TProv, TReq>; /*!< Node (pole) iface type */
-	using TCnodeIf = MPc<TReq, TProv>; /*!< Complement node (pole) type */
-	using TCnode = PCpOmnp<TReq, TProv>; /*!< Complement node (pole) type */
-    public:
-	class Cnode: public TCnode {
-	    public:
-		Cnode(TReq* aPx, PTnnp* aHost): TCnode(aPx), mHost(aHost) {}
-		// From MNcpp
-		virtual typename TCnode::TPair* binded() override { return mHost;}
-	    private:
-		PTnnp* mHost;
-	};
-    public:
-	PTnnp(TProv* aProvPx, TReq* aReqPx): PCpOnp<TProv, TReq>(aProvPx), mCnode(aReqPx, this) {}
-	// From MNcpp
-	virtual typename TScp::TPair* binded() override { return &mCnode;}
-	virtual bool disconnectAll() override {
-	    bool res = TScp::disconnectAll();
-	    res = res && mCnode.disconnectAll();
-	    return res;
-	}
-    protected:
-	Cnode mCnode;
-};
-
-
-
-/** @brief Extender, not proxied
- * Included internal complement connpoint Int
- * Both extd and Int are proxy of one to another to translate ifaces
- * */
-template <class TProv, class TReq>
+template <class TProv, class TReq, class TCn>
 class PExtd : public PCpOnp<TProv, TReq>
 {
     public:
@@ -342,7 +225,7 @@ class PExtd : public PCpOnp<TProv, TReq>
 	using TPair = typename TScp::TPair;
 	using TNodeIf = MPc<TProv, TReq>; /*!< Node (pole) iface type */
 	using TCnodeIf = MPc<TReq, TProv>; /*!< Complement node (pole) type */
-	using TCnode = PCpOnp<TReq, TProv>; /*!< Complement node (pole) type */
+	using TCnode = TCn; /*!< Complement node (pole) type */
     public:
 	class Cnode: public TCnode {
 	    public:
@@ -355,10 +238,10 @@ class PExtd : public PCpOnp<TProv, TReq>
     public:
 	PExtd(TProv* aProvPx, TReq* aReqPx): PCpOnp<TProv, TReq>(aProvPx), mCnode(aReqPx, this) {}
 	// From MNcpp
-	virtual typename TScp::TPair* binded() override { return &mCnode;}
-	virtual bool disconnectAll() override {
-	    bool res = TScp::disconnectAll();
-	    res = res && mCnode.disconnectAll();
+	typename TScp::TPair* binded() override { return &mCnode;}
+	bool disconnect() override {
+	    bool res = TScp::disconnect();
+	    res = res && mCnode.disconnect();
 	    return res;
 	}
     protected:
@@ -366,24 +249,8 @@ class PExtd : public PCpOnp<TProv, TReq>
 };
 
 
-/** @brief Primary DEDS. Socket, one-to-one, no Id
- * */
-template <class TPif, class TRif>
-class PSockOnp: public PCpOnp <TPif, TRif>
-{
-    public:
-	using TPair= typename MPc<TPif, TRif>::TPair;
-	using TParent= PCpOnp <TPif, TRif>;
 
-	PSockOnp(TPif* aPx): PCpOnp<TPif, TRif>(aPx) {}
-	bool attach(TPair* aPair) override {
-	    PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
-	    return  TParent::mPx->attach(*pair->mPx) ? PCpOnp <TPif, TRif>::attach(aPair) : false;
-	}
-	bool detach(TPair* aPair) override {
-	    PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
-	    return  TParent::mPx->detach(*pair->mPx) ? PCpOnp <TPif, TRif>::detach(aPair) : false;
-	}
-};
+
 
 #endif
+

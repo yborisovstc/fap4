@@ -75,23 +75,29 @@ template <typename P = tag_outp, typename Q = tag_inp> struct TOwner {
     typename MPsCp<std::string, Q>::Tcp* mId = nullptr;
 };
 
-
+/** @brief Owning native interface
+ * Note: design variant having pins as refs to CPs is wrong - 
+ * it causes CP sharing ownership that leads to the problems
+ * on the model destructor for instance
+ * */
 template <typename P = tag_outp, typename Q = tag_inp>
 struct MNnOwning {
     using TPair = MNnOwning<Q,P>;
     bool attach(TPair& aPair) {
 	bool res = true;
 	res &= mUri->attach(aPair.mUri);
+	res &= mId->attach(aPair.mId);
 	return res;
     }
     bool detach(TPair& aPair) {
 	bool res = true;
 	res &= mUri->detach(aPair.mUri);
+	res &= mId->detach(aPair.mId);
 	return res;
     }
 
-    typename MPsCp<GUri, P>::Tcp* mUri = nullptr;
-    typename MPsCp<std::string, Q>::Tcp* mId = nullptr;
+    typename MPsCp<GUri, P>::Tcp* mUri;
+    typename MPsCp<std::string, Q>::Tcp* mId;
 };
 
 

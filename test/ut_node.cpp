@@ -63,6 +63,8 @@ void Ut_node::test_owning_1()
     des.Run(5, 2);
     GUri n2uri = des.mNode2.mOwningUriTr.mOcp.data();
     std::string n2uris = n2uri;
-    //CPPUNIT_ASSERT_MESSAGE("Failed running DesO1", data == 5);
+    CPPUNIT_ASSERT_MESSAGE("Failed running DesO1", n2uris == "Node1.Node2");
+    //des.mNode1.mCpOwning3.disconnect();
+    //des.mNode2.mCpOwned3.disconnect();
     cout << endl << "=== END. Test of owner-owned relation ===" << endl;
 }
