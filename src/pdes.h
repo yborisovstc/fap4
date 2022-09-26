@@ -9,7 +9,6 @@
 
 #include "mpdes.h"
 #include "pconn.h"
-//#include "pconn2.h"
 
 
 /** @brief Primary DEDS base
@@ -122,6 +121,80 @@ class PsOcp : public PCpOmnp<MDesStateData<PDd<TData>>, MDesInpObserver> {
 };
 
 
+/** @brief Primary state input extender
+ * */
+template <class TData>
+class PsIex : public PsIcp<TData>, MDesInpObserver, MDesStateData<PDd<TData>>
+{
+    public:
+	using TScp = PsIcp<TData>;  /*!< Self connpoint type */
+	using TPair = typename TScp::TPair;
+	using TCnode = PsOcp<TData>; /*!< Complement node (pole) type */
+    public:
+	class Cnode: public TCnode {
+	    public:
+		Cnode(PsIex* aHost): TCnode(aHost), mHost(aHost) {}
+		// From MNcpp
+		virtual typename TCnode::TPair* binded() override { return mHost;}
+	    private:
+		PsIex* mHost;
+	};
+    public:
+	PsIex() : PsIcp<TData>(this), mCnode(this) {}
+	// From MDesInpObserver
+	void onInpUpdated() override {}
+	// From MDesStateData
+	const PDd<TData>* sData() const override { return nullptr;}
+	// From MNcpp
+	virtual typename TScp::TPair* binded() override { return &mCnode;}
+	virtual bool disconnect() override {
+	    bool res = TScp::disconnect();
+	    res = res && mCnode.disconnect();
+	    return res;
+	}
+    protected:
+	Cnode mCnode;
+};
+
+
+
+/** @brief Primary state output extender
+ * */
+template <class TData>
+class PsOex : public PsOcp<TData>, MDesInpObserver, MDesStateData<PDd<TData>>
+{
+    public:
+	using TScp = PsOcp<TData>;  /*!< Self connpoint type */
+	using TPair = typename TScp::TPair;
+	using TCnode = PsIcp<TData>; /*!< Complement node (pole) type */
+    public:
+	class Cnode: public TCnode {
+	    public:
+		Cnode(PsOex* aHost): TCnode(aHost), mHost(aHost) {}
+		// From MNcpp
+		virtual typename TCnode::TPair* binded() override { return mHost;}
+	    private:
+		PsOex* mHost;
+	};
+    public:
+	PsOex() : PsOcp<TData>(this), mCnode(this) {}
+	// From MDesInpObserver
+	void onInpUpdated() override {}
+	// From MDesStateData
+	const PDd<TData>* sData() const override { return nullptr;}
+	// From MNcpp
+	virtual typename TScp::TPair* binded() override { return &mCnode;}
+	virtual bool disconnect() override {
+	    bool res = TScp::disconnect();
+	    res = res && mCnode.disconnect();
+	    return res;
+	}
+    protected:
+	Cnode mCnode;
+};
+
+
+
 
 // EXPR#Using_tag
 
@@ -133,6 +206,10 @@ template <typename T, typename K> class MPsCp;
 //template <typename T> class MPsCp<T, tag_inp> : public PsIcp<T> {};
 template <typename T> struct MPsCp<T, tag_outp> { using Tcp = PsOcp<T>; };
 template <typename T> struct MPsCp<T, tag_inp> { using Tcp =  PsIcp<T>; };
+
+template <typename T, typename K> class MPsEx;
+template <typename T> struct MPsEx<T, tag_outp> { using Tcp = PsOex<T>; };
+template <typename T> struct MPsEx<T, tag_inp> { using Tcp =  PsIex<T>; };
 
 // END EXPR#Using_tag
 

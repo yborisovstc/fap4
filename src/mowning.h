@@ -62,7 +62,8 @@ bool MNOwner::connect(MPcb* aPair) {
 
 // EXP Using tag
 
-template <typename P = tag_outp, typename Q = tag_inp> struct TOwner {
+template <typename P = tag_outp, typename Q = tag_inp>
+struct TOwner {
     using TPair = TOwner<Q,P>;
     explicit TOwner() {}
     bool connect(TPair* aPair) {
@@ -85,19 +86,21 @@ struct MNnOwning {
     using TPair = MNnOwning<Q,P>;
     bool attach(TPair& aPair) {
 	bool res = true;
-	res &= mUri->attach(aPair.mUri);
+	res &= mUri.attach(&aPair.mUri);
 	res &= mId->attach(aPair.mId);
 	return res;
     }
     bool detach(TPair& aPair) {
 	bool res = true;
-	res &= mUri->detach(aPair.mUri);
+	res &= mUri.detach(&aPair.mUri);
 	res &= mId->detach(aPair.mId);
 	return res;
     }
 
-    typename MPsCp<GUri, P>::Tcp* mUri;
+    //typename MPsCp<GUri, P>::Tcp* mUri;
     typename MPsCp<std::string, Q>::Tcp* mId;
+
+    typename MPsEx<GUri, P>::Tcp mUri;
 };
 
 

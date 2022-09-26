@@ -26,10 +26,12 @@ Node::Node(const std::string& aName): PDes(),
     */
     // Owned CP
     mOwned2.mId = &sName.mOcp;
-    mOwned2.mUri = &mOwningUriTr.Inp1;
+    //mOwned2.mUri = &mOwningUriTr.Inp1;
+    mOwningUriTr.Inp1.connect(mOwned2.mUri.binded());
     // Owning CP
     mOwning2.mId = &tOwnedId.Inp1;
-    mOwning2.mUri = &mOwningUriTr.mOcp;
+    //mOwning2.mUri = &mOwningUriTr.mOcp;
+    mOwningUriTr.mOcp.binded()->connect(&mOwning2.mUri);
     // Owning Uri
     mOwningUriTr.Inp2.connect(&sName.mOcp);
     mOwningUriTr.Inp3.connect(&mCpOwned3.oConnected);

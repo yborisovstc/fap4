@@ -377,12 +377,14 @@ class PSockOnp: public PCpOnp <TPif, TRif>
 
 	PSockOnp(TPif* aPx): PCpOnp<TPif, TRif>(aPx) {}
 	bool attach(TPair* aPair) override {
-	    PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
-	    return  TParent::mPx->attach(*pair->mPx) ? PCpOnp <TPif, TRif>::attach(aPair) : false;
+	   // PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
+	   // return  TParent::mPx->attach(*pair->mPx) ? PCpOnp <TPif, TRif>::attach(aPair) : false;
+	   return  TParent::mPx->attach(*aPair->provided()) ? PCpOnp <TPif, TRif>::attach(aPair) : false;
 	}
 	bool detach(TPair* aPair) override {
-	    PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
-	    return  TParent::mPx->detach(*pair->mPx) ? PCpOnp <TPif, TRif>::detach(aPair) : false;
+	    //PCpOnp<TRif, TPif>* pair = dynamic_cast<PCpOnp<TRif, TPif>*>(aPair);
+	    //return  TParent::mPx->detach(*pair->mPx) ? PCpOnp <TPif, TRif>::detach(aPair) : false;
+	    return  TParent::mPx->detach(*aPair->provided()) ? PCpOnp <TPif, TRif>::detach(aPair) : false;
 	}
 };
 

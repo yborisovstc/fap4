@@ -2,241 +2,217 @@
 #ifndef __NDEDS_PCONN2_H
 #define __NDEDS_PCONN2_H
 
+#include <iostream>
+#include <vector>
 #include <set>
+#include <forward_list>
+#include <iterator>
+#include <type_traits>
 
 #include <assert.h>
 
 
 
-/** @brief Primary connection point interface specifying complementary pair of OOP ifaces
- * @tparam  TPif  provided interface
- * @tparam  TRif  required interface
- * */
-template <class TPif, class TRif>
-class MPc
-{
-    public:
-	using TSelf = MPc<TPif, TRif>;
-	using TPair = MPc<TRif, TPif>;
-	virtual ~MPc() = default;
-	bool connect(TPair* aPair);
-	bool disconnect(TPair* aPair);
-	// Local
-	virtual TPif* provided() = 0;
-	virtual const TPif* provided() const = 0;
-	virtual bool disconnect() = 0;
-	virtual bool isPair(TPair* aPair) const = 0;
-	virtual bool attach(TPair* aPair) = 0;
-	virtual bool detach(TPair* aPair) = 0;
-	/** @brief Gets pairs count */
-	virtual int pcount() const = 0;
-	/** @brief Gets binded connpoint. Used in tree node or extender. */
-	virtual TPair* binded() = 0;
-	const TPair* binded() const { const_cast<const TPair*>(const_cast<TSelf*>(this)->binded());}
-	/** @brief Pairs traversal */
-	// TODO This traversal scheme is very ineffective. To redesign. The reason of the current scheme is that
-	// it was assumed that the tree is not homogeneous. To consider homogeneous tree.
-	virtual TPair* firstPair() = 0;
-	virtual TPair* nextPair(TPair* aPair) = 0;
-	/** @brief Tree leafs traversal */
-	TPair* firstLeaf() {
-	    TPair* res = nullptr;
-	    auto pair = firstPair();
-	    while (pair) {
-		if (res = pair->binded() ? pair->binded()->firstLeaf() : pair) break;
-		pair = nextPair(pair);
-	    }
-	    return res;
-	}
-	TPair* nextLeaf(TPair* aLeaf) {
-	    TPair* res = nullptr;
-	    auto np = nextPair(aLeaf);
-	    while (np) {
-		res = np->binded() ? np->binded()->firstLeaf() : np;
-		if (res) break;
-		np = nextPair(np);
-	    }
-	    if (! res && binded()) {
-		res = binded()->nextLeaf();
-	    }
-	    return res;
-	}
-};
-
-    template <class TPif, class TRif>
-bool MPc<TPif, TRif>::connect(TPair* aPair)
-{
-    assert(aPair && !aPair->isPair(this) && !isPair(aPair));
-    bool res = aPair->attach(this);
-    if (res) {
-	res = attach(aPair);
-    }
-    return res;
-}
-
-template <class TPif, class TRif>
-bool MPc<TPif, TRif>::disconnect(TPair* aPair)
-{
-    assert(aPair && aPair->isPair(this) && isPair(aPair));
-    bool res = aPair->detach(this);
-    if (res) {
-	res = detach(aPair);
-    }
-    return res;
-}
-
-
-
-
-/** @brief Native connection point, one-to-one, no Id, proxy
+/** @brief Primary connection point, no Id, provided is proxied
  * @tparam TPif  type of provided interface
  * @tparam TPair type of pair
- * @tparam THost type of host
- * @tparam TPx type of provided iface proxy
+ * @tparam VOto  sign of one-to-one connpoint
  * */
 template <class TPif, class TRif>
-class PCpOnp : public MPc<TPif, TRif>
+class PCpnp /* : public MPc<TPif, TRif>*/
 {
     public:
-	using TSelf= typename MPc<TPif, TRif>::TSelf;
-	using TPair= typename MPc<TPif, TRif>::TPair;
-    public:
-	PCpOnp(TPif* aPx): mPair(nullptr), mPx(aPx) {}
-	virtual ~PCpOnp() { disconnect(); }
-	virtual TPif* provided() override { return mPx;}
-	virtual const TPif* provided() const override { return mPx;}
-	virtual bool disconnect() override {
-	    bool res = true;
-	    if (mPair) res = MPc<TPif, TRif>::disconnect(mPair);
-	    return res;
-	}
-	virtual bool attach(TPair* aPair) override;
-	virtual bool detach(TPair* aPair) override;
-	virtual bool isPair(TPair* aPair) const override { return mPair && mPair == aPair; }
-	virtual int pcount() const override { return mPair ? 1 : 0; }
-	TPair* binded() override { return nullptr;}
-	TPair* firstPair() override { return  mPair;}
-	TPair* nextPair(TPair* aPair) override { return nullptr;}
-    public:
-	TRif* required() { return mPair ?  mPair->provided() : nullptr; }
-	const TRif* required()  const { return mPair ?  mPair->provided() : nullptr; }
-    //!!protected:
-    public:
-	TPair* mPair;
-	TPif* mPx;
-};
-
-template <class TPif, class TRif>
-bool PCpOnp<TPif, TRif>::attach(TPair* aPair)
-{
-    assert(aPair && !mPair && !isPair(aPair));
-    mPair = aPair;
-    return true;
-}
-
-template <class TPif, class TRif>
-bool PCpOnp<TPif, TRif>::detach(TPair* aPair)
-{
-    assert(aPair && isPair(aPair));
-    mPair = nullptr;
-    return true;
-}
-
-
-
-
-/** @brief Primary connection point, one-to-many, no Id, provided is proxied
- * @tparam TPif  type of provided interface
- * @tparam TPair type of pair
- * @tparam TPx type of provided iface proxy
- * */
-template <class TPif, class TRif>
-class PCpOmnp: public MPc<TPif, TRif>
-{
-    public:
-	using TThis= typename PCpOmnp<TPif, TRif>::TSelf;
-	using TSelf= typename MPc<TPif, TRif>::TSelf;
-	using TPair= typename MPc<TPif, TRif>::TPair;
+	using TSelf= PCpnp<TPif, TRif>;
+	using TPair= PCpnp<TRif, TPif>;
+	//using TSelf= typename MPc<TPif, TRif>::TSelf;
+	//using TPair= typename MPc<TPif, TRif>::TPair;
 	using TPairs = std::set<TPair*>;
-	using iterator = typename TPairs::iterator;
+	using TPairsIterator = typename TPairs::iterator;
     public:
-	PCpOmnp(TPif* aPx): mPx(aPx) {}
-	virtual ~PCpOmnp() { PCpOmnp<TPif, TRif>::disconnect(); }
-	virtual TPif* provided() override { return mPx;}
-	virtual const TPif* provided() const override { return mPx;}
-	virtual bool attach(TPair* aPair) override;
-	virtual bool detach(TPair* aPair) override;
-	virtual bool disconnect() override {
-	    bool res = true;
-	    while (res && begin() != end()) {
-		res = MPc<TPif, TRif>::disconnect(*begin());
+	struct LeafsIterator {
+	    LeafsIterator(const TPairsIterator &aRootEnd): mRootEnd(aRootEnd) {}
+	    LeafsIterator(const TPairsIterator& aPi, const TPairsIterator &aRootEnd): LeafsIterator(aRootEnd) { mPi.push_front(aPi); }
+	    TPair* operator*() {
+		return *(mPi.front());
+	    }
+	    LeafsIterator operator++(int) {
+		auto res = *this;
+		bool stop = false;
+		bool end = false;
+		do {
+		    // Find nearest uncompleted node
+		    auto& front = mPi.front();
+		    auto plit = mPi.begin();
+		    plit++;
+		    if (plit != mPi.end()) {
+			TPairsIterator plpit = *plit;
+			TSelf* pl = (*plpit)->binded();
+			front++;
+			if (front == pl->pairsEnd()) {
+			    // Current node is over, go to next one, and set to it's leaf begin
+			    mPi.pop_front();
+			} else {
+			    // Uncompleted node found
+			    stop = true;
+			}
+		    } else {
+			// Root node reached
+			front++;
+			stop = true;
+			if (front == mRootEnd) {
+			    end = true;
+			}
+		    }
+		} while (!stop);
+
+		if (!end) {
+		    auto& front = mPi.front();
+		    TSelf* pbnd = (*front)->binded();
+		    if (pbnd) {
+			auto pli = pbnd->leafsBegin();
+			mPi.splice_after(mPi.before_begin(), pli.mPi);
+		    }
+		}
+
+		return res;
+	    }
+	    bool operator==(const LeafsIterator& aB) {
+		return  mPi == aB.mPi;
+	    }
+	    bool operator!=(const LeafsIterator& aB) {
+		return  mPi != aB.mPi;
+	    }
+	    //void __attribute__ ((noinline)) dump();
+	    void __attribute__ ((noinline)) dump() {
+		for (auto it = mPi.begin(); it != mPi.end(); it++) {
+		    TPair* ptr = **it;
+		    std::cout << std::hex << ptr << std::endl;
+		}
+	    }
+	    std::forward_list<TPairsIterator> mPi;
+	    TPairsIterator mRootEnd;
+	};
+    public:
+	PCpnp(TPif* aPx, bool aOto = false): mPx(aPx), mOto(aOto) {}
+	~PCpnp() { this->disconnect(); }
+
+	bool connect(TPair* aPair) {
+	    assert((!mOto || pcount() == 0 ) &&  aPair && !aPair->isPair(this) && !isPair(aPair));
+	    bool res = aPair->attach(this);
+	    if (res) {
+		res = attach(aPair);
 	    }
 	    return res;
 	}
-	virtual bool isPair(TPair* aPair) const override;
-	virtual int pcount() const override { return mPairs.size(); }
-	TPair* binded() override { return nullptr;}
-	TPair* firstPair() override { return mPairs.size() > 0 ? *mPairs.begin() : nullptr;}
-	TPair* nextPair(TPair* aPair) override {
-	    auto it = mPairs.find(aPair); it++;
-	    auto res = (it != mPairs.end()) ? *it : nullptr; 
+
+	bool disconnect(TPair* aPair) {
+	    assert(aPair && aPair->isPair(this) && isPair(aPair));
+	    bool res = aPair->detach(this);
+	    if (res) {
+		res = detach(aPair);
+	    }
 	    return res;
 	}
+
+	TPif* provided() { return mPx;}
+	const TPif* provided() const { return mPx;}
+
+	bool attach(TPair* aPair) {
+	    assert(aPair && !isPair(aPair));
+	    mPairs.insert(aPair);
+	    return true;
+	}
+	bool detach(TPair* aPair) {
+	    assert(aPair && isPair(aPair));
+	    mPairs.erase(aPair);
+	    return true;
+	}
+	virtual bool disconnect() {
+	    bool res = true;
+	    while (res && pairsBegin() != pairsEnd()) {
+		res = disconnect(*pairsBegin());
+	    }
+	    return res;
+	}
+	bool isPair(TPair* aPair) const { return mPairs.count(aPair) == 1;}
+	int pcount() const { return mPairs.size(); }
+	virtual TPair* binded() { return nullptr;}
 	// Local
-	iterator begin() { return mPairs.begin(); }
-	iterator end() { return mPairs.end(); }
+	TPairsIterator pairsBegin() { return mPairs.begin(); }
+	TPairsIterator pairsEnd() { return mPairs.end(); }
+	LeafsIterator leafsEnd() { return LeafsIterator(pairsEnd(), pairsEnd()); }
+	/* Ver.01
+	LeafsIterator leafsBegin() {
+	    LeafsIterator it;
+	    TPairsIterator pit = pairsBegin();
+	    if (pit != pairsEnd()) {
+		TSelf* pbnd = (*pit)->binded();
+		if (!pbnd) {
+		    it.mPi.push_front(pit);
+		} else {
+		    auto pli = pbnd->leafsBegin();
+		    it.mPi.splice_after(it.mPi.before_begin(), pli.mPi);
+		}
+	    }
+	    return it;
+	}
+	*/
+	LeafsIterator leafsBegin() {
+	    TPairsIterator pit = pairsBegin();
+	    LeafsIterator it(pit, pairsEnd());
+	    if (pit != pairsEnd()) {
+		TSelf* pbnd = (*pit)->binded();
+		if (pbnd) {
+		    auto pli = pbnd->leafsBegin();
+		    it.mPi.splice_after(it.mPi.before_begin(), pli.mPi);
+		}
+	    }
+	    return it;
+	}
+
+	void __attribute__ ((noinline)) dump() {
+	    for (auto elem : mPairs) {
+		std::cout << std::hex << elem << std::endl;
+	    }
+	}
+
     protected:
 	TPairs mPairs;
 	TPif* mPx;
+	bool mOto;
 };
 
-
-    template <class TPif, class TRif>
-bool PCpOmnp<TPif, TRif>::attach(TPair* aPair)
-{
-    assert(aPair && !isPair(aPair));
-    mPairs.insert(aPair);
-    return true;
-}
-
-    template <class TPif, class TRif>
-bool PCpOmnp<TPif, TRif>::detach(TPair* aPair)
-{
-    assert(aPair && isPair(aPair));
-    mPairs.erase(aPair);
-    return true;
-}
-
+/*
 template <class TPif, class TRif>
-bool PCpOmnp<TPif, TRif>::isPair(TPair* aPair) const
-{
-    return mPairs.count(aPair) == 1;
+void __attribute__ ((noinline)) PCpnp<TPif, TRif>::LeafsIterator::dump() {
+    for (auto it = mPi.begin(); it != mPi.end(); it++) {
+	auto ptr = *it;
+	std::cout << std::hex << ptr << std::endl;
+    }
 }
+*/
 
-
-
-/** @brief Extender, proxied
+/** @brief Expander, proxied
  * */
-template <class TProv, class TReq, class TCn>
-class PExtd : public PCpOnp<TProv, TReq>
+template <class TProv, class TReq, class TCn, bool VOto = false>
+class PExp : public PCpnp<TProv, TReq>
 {
     public:
-	using TScp = PCpOnp<TProv, TReq>;  /*!< Self connpoint type */
+	using TScp = PCpnp<TProv, TReq>;  /*!< Self connpoint type */
 	using TPair = typename TScp::TPair;
-	using TNodeIf = MPc<TProv, TReq>; /*!< Node (pole) iface type */
-	using TCnodeIf = MPc<TReq, TProv>; /*!< Complement node (pole) type */
 	using TCnode = TCn; /*!< Complement node (pole) type */
     public:
 	class Cnode: public TCnode {
 	    public:
-		Cnode(TReq* aPx, PExtd* aHost): TCnode(aPx), mHost(aHost) {}
+		Cnode(TReq* aPx, PExp* aHost): TCnode(aPx, VOto), mHost(aHost) {}
 		// From MNcpp
 		virtual typename TCnode::TPair* binded() override { return mHost;}
 	    private:
-		PExtd* mHost;
+		PExp* mHost;
 	};
     public:
-	PExtd(TProv* aProvPx, TReq* aReqPx): PCpOnp<TProv, TReq>(aProvPx), mCnode(aReqPx, this) {}
+	//PExp(TProv* aProvPx, TReq* aReqPx): PCpnp<TProv, TReq, true>(aProvPx), mCnode(aReqPx, this) {}
+	PExp(): PCpnp<TProv, TReq>(nullptr, true), mCnode(nullptr, this) {}
 	// From MNcpp
 	typename TScp::TPair* binded() override { return &mCnode;}
 	bool disconnect() override {
@@ -249,6 +225,15 @@ class PExtd : public PCpOnp<TProv, TReq>
 };
 
 
+/** @brief Socket
+ * */
+template <class TProv, class TReq>
+using PSock = PExp<TProv, TReq, PCpnp<TReq, TProv>>;
+
+/** @brief Extender
+ * */
+template <class TProv, class TReq>
+using PExd = PExp<TProv, TReq, PCpnp<TReq, TProv>, true>;
 
 
 
