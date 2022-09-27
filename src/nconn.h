@@ -66,7 +66,7 @@ struct MNCp2: public PSockOnp<TPif, TRif>, public MDesStateData<PDd<bool>>
 
     MNCp2(TPif* aPx): PSockOnp<TPif, TRif>(aPx) {}
     void notifyConnUpdated() {
-	for (auto it = oConnected.begin(); it != oConnected.end(); it++) {
+	for (auto it = oConnected.leafsBegin(); it != oConnected.leafsEnd(); it++) {
 	    (*it)->provided()->onInpUpdated();
 	}
     }
@@ -106,7 +106,7 @@ struct MNCp2: public PSockOnp<TPif, TRif>, public MDesStateData<PDd<bool>>
 
     MNCp2(TPif* aPx): PSockOnp<TPif, TRif>(aPx) {}
     void notifyConnUpdated() {
-	for (auto it = oConnected.begin(); it != oConnected.end(); it++) {
+	for (auto it = oConnected.leafsBegin(); it != oConnected.leafsEnd(); it++) {
 	    (*it)->provided()->onInpUpdated();
 	}
     }

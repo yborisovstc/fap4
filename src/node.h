@@ -44,20 +44,14 @@ class Node: public PDes
 		}
 	    }
 	};
+	// Interfaces proxy, needs to be placed after ifaces to keep right destruction order
 	MNnOwning<> mOwning2;
 	MNnOwning<>::TPair mOwned2;
     public:
 	// Interfaces
-	//PCpOnp<MOwned, MOwner> mCpOwned;
-	//PCpOmnp<MOwner, MOwned> mCpOwning;
 	PCpOnp<MNode, MVoid> mCpNode;
-	//TOwner<tag_outp, tag_inp> mCpOwning;
-	//TOwner<tag_inp, tag_outp> mCpOwned;
-	//MNCp<MNnOwning> mCpOwning2;
-	//PSockOnp<MNnOwning<>, MNnOwning<>::TPair> mCpOwning2;
-	//PSockOnp<MNnOwning<>::TPair, MNnOwning<>> mCpOwned2;
-	MNCp2<MNnOwning<>> mCpOwning3;
-	MNCp2<MNnOwning<>::TPair> mCpOwned3;
+	MNCp2<MNnOwning<>> mCpOwning3;       //!< Owning
+	MNCp2<MNnOwning<>::TPair> mCpOwned3; //!< Owned
     private:
 	PState<GUri> mUri;
 	PTransl2<GUri, GUri, std::string> mOwningUri;

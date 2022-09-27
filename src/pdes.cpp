@@ -17,7 +17,8 @@ void PDesBase::setActivated()
 {
     if (!mActNotified) {
 	// Propagate activation to owner
-	if (auto rq = mScp.required()) {
+	if (mScp.pairsBegin() != mScp.pairsEnd()) {
+	    auto rq = (*mScp.pairsBegin())->provided();
 	    rq->onActivated(this);
 	    mActNotified = true;
 	}
@@ -28,7 +29,8 @@ void PDesBase::setUpdated()
 {
     if (!mUpdNotified) {
 	// Propagate update to owner
-	if (auto rq = mScp.required()) {
+	if (mScp.pairsBegin() != mScp.pairsEnd()) {
+	    auto rq = (*mScp.pairsBegin())->provided();
 	    rq->onUpdated(this);
 	    mUpdNotified = true;
 	}

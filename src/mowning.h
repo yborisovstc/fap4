@@ -3,7 +3,7 @@
 #define __FAP4_MOWNING_H
 
 #include "miface.h"
-#include "pconn.h"
+#include "pconn2.h"
 #include "pdes.h"
 #include "nconn.h"
 #include "guri.h"
@@ -16,7 +16,7 @@ class MOwner : public MIface
 {
     public:
 	static const char* Type() { return "MOwner";};
-	using TCp =  MPc<MOwned, MOwner>;
+	//using TCp =  MPc<MOwned, MOwner>;
 	MOwner(MPsOutp<GUri>& aUri): mUri(aUri) {}
 	MPsOutp<GUri>& mUri;   //!< Owner URI, is used to form owned URI
 };
@@ -28,7 +28,7 @@ class MOwned : public MIface
 {
     public:
 	static const char* Type() { return "MOwned";};
-	using TCp =  MPc<MOwned, MOwner>;
+	//using TCp =  MPc<MOwned, MOwner>;
 };
 
 #if 0

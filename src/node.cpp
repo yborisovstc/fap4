@@ -31,7 +31,7 @@ Node::Node(const std::string& aName): PDes(),
     // Owning CP
     mOwning2.mId = &tOwnedId.Inp1;
     //mOwning2.mUri = &mOwningUriTr.mOcp;
-    mOwningUriTr.mOcp.binded()->connect(&mOwning2.mUri);
+    mOwningUriTr.mOcp.connect(mOwning2.mUri.binded());
     // Owning Uri
     mOwningUriTr.Inp2.connect(&sName.mOcp);
     mOwningUriTr.Inp3.connect(&mCpOwned3.oConnected);

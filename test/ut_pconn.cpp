@@ -10,8 +10,8 @@ using namespace std;
 class Ut_pconn : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(Ut_pconn);
-//    CPPUNIT_TEST(test_1);
-    CPPUNIT_TEST(test_2);
+    CPPUNIT_TEST(test_1);
+//    CPPUNIT_TEST(test_2);
     CPPUNIT_TEST_SUITE_END();
     public:
     virtual void setUp();
@@ -48,10 +48,10 @@ void Ut_pconn::test_1()
     cout << endl << "=== Test of tree leafs iterator ===" << endl;
 
     PCpnp<I1, I2> p1(nullptr, true);
-    PSock<I2, I1> s1;
-    PSock<I2, I1> s2;
+    PExdm<I2, I1> s1;
+    PExdm<I2, I1> s2;
     PCpnp<I2, I1> l3_1(nullptr, true);
-    PSock<I2, I1> s2_1;
+    PExdm<I2, I1> s2_1;
     PCpnp<I2, I1> l1(nullptr, true);
     PCpnp<I2, I1> l2(nullptr, true);
     p1.connect(&s1);
@@ -91,7 +91,7 @@ void Ut_pconn::test_2()
 {
     cout << endl << "=== Test of pconn extender ===" << endl;
 
-    PCpnp<I1, I2> p1(nullptr);
+    PCpnpr<I1, I2> p1(nullptr);
     PExd<I2, I1> e1;
     PExd<I1, I2> e2;
     PCpnp<I2, I1> l1(nullptr, true);

@@ -19,7 +19,7 @@
  * @tparam VOto  sign of one-to-one connpoint
  * */
 template <class TPif, class TRif>
-class PCpnp /* : public MPc<TPif, TRif>*/
+class PCpnp
 {
     public:
 	using TSelf= PCpnp<TPif, TRif>;
@@ -28,6 +28,7 @@ class PCpnp /* : public MPc<TPif, TRif>*/
 	//using TPair= typename MPc<TPif, TRif>::TPair;
 	using TPairs = std::set<TPair*>;
 	using TPairsIterator = typename TPairs::iterator;
+	using TPairsConstIterator = typename TPairs::const_iterator;
     public:
 	struct LeafsIterator {
 	    LeafsIterator(const TPairsIterator &aRootEnd): mRootEnd(aRootEnd) {}
@@ -92,6 +93,23 @@ class PCpnp /* : public MPc<TPif, TRif>*/
 	    std::forward_list<TPairsIterator> mPi;
 	    TPairsIterator mRootEnd;
 	};
+
+	struct LeafsConstIterator {
+	    LeafsConstIterator(const TPairsConstIterator &aRootEnd): mRootEnd(aRootEnd) {}
+	    LeafsConstIterator(const TPairsConstIterator& aPi, const TPairsConstIterator& aRootEnd): LeafsConstIterator(aRootEnd) { mPi.push_front(aPi); }
+	    const TPair* operator*() {
+		return *(mPi.front());
+	    }
+	    bool operator==(const LeafsConstIterator& aB) {
+		return  mPi == aB.mPi;
+	    }
+	    bool operator!=(const LeafsConstIterator& aB) {
+		return  mPi != aB.mPi;
+	    }
+
+	    std::forward_list<TPairsConstIterator> mPi;
+	    TPairsConstIterator mRootEnd;
+	};
     public:
 	PCpnp(TPif* aPx, bool aOto = false): mPx(aPx), mOto(aOto) {}
 	~PCpnp() { this->disconnect(); }
@@ -99,30 +117,34 @@ class PCpnp /* : public MPc<TPif, TRif>*/
 	bool connect(TPair* aPair) {
 	    assert((!mOto || pcount() == 0 ) &&  aPair && !aPair->isPair(this) && !isPair(aPair));
 	    bool res = aPair->attach(this);
+	    assert(res); // Debug
 	    if (res) {
 		res = attach(aPair);
 	    }
+	    assert(res); // Debug
 	    return res;
 	}
 
 	bool disconnect(TPair* aPair) {
 	    assert(aPair && aPair->isPair(this) && isPair(aPair));
 	    bool res = aPair->detach(this);
+	    assert(res); // Debug
 	    if (res) {
 		res = detach(aPair);
-	    }
+	    } 
+	    assert(res); // Debug
 	    return res;
 	}
 
 	TPif* provided() { return mPx;}
 	const TPif* provided() const { return mPx;}
 
-	bool attach(TPair* aPair) {
+	virtual bool attach(TPair* aPair) {
 	    assert(aPair && !isPair(aPair));
 	    mPairs.insert(aPair);
 	    return true;
 	}
-	bool detach(TPair* aPair) {
+	virtual bool detach(TPair* aPair) {
 	    assert(aPair && isPair(aPair));
 	    mPairs.erase(aPair);
 	    return true;
@@ -140,6 +162,8 @@ class PCpnp /* : public MPc<TPif, TRif>*/
 	// Local
 	TPairsIterator pairsBegin() { return mPairs.begin(); }
 	TPairsIterator pairsEnd() { return mPairs.end(); }
+	TPairsConstIterator pairsCbegin() const { return mPairs.cbegin(); }
+	TPairsConstIterator pairsCend() const { return mPairs.cend(); }
 	LeafsIterator leafsEnd() { return LeafsIterator(pairsEnd(), pairsEnd()); }
 	/* Ver.01
 	LeafsIterator leafsBegin() {
@@ -169,6 +193,19 @@ class PCpnp /* : public MPc<TPif, TRif>*/
 	    }
 	    return it;
 	}
+	LeafsConstIterator leafsCbegin() const {
+	    TPairsConstIterator pit = pairsCbegin();
+	    LeafsConstIterator it(pit, pairsCend());
+	    if (pit != pairsCend()) {
+		TSelf* pbnd = (*pit)->binded();
+		if (pbnd) {
+		    auto pli = pbnd->leafsBegin();
+		    it.mPi.splice_after(it.mPi.before_begin(), pli.mPi);
+		}
+	    }
+	    return it;
+	}
+	LeafsConstIterator leafsCend() const { return LeafsConstIterator(pairsCend(), pairsCend()); }
 
 	void __attribute__ ((noinline)) dump() {
 	    for (auto elem : mPairs) {
@@ -182,15 +219,12 @@ class PCpnp /* : public MPc<TPif, TRif>*/
 	bool mOto;
 };
 
-/*
-template <class TPif, class TRif>
-void __attribute__ ((noinline)) PCpnp<TPif, TRif>::LeafsIterator::dump() {
-    for (auto it = mPi.begin(); it != mPi.end(); it++) {
-	auto ptr = *it;
-	std::cout << std::hex << ptr << std::endl;
-    }
-}
-*/
+template <class TPif, class TRif, bool VOTO = false>
+class PCpnpr : public PCpnp<TPif, TRif>
+{
+    public:
+	PCpnpr(TPif* aPx): PCpnp<TPif, TRif>(aPx) { PCpnp<TPif, TRif>::mOto = VOTO;}
+};
 
 /** @brief Expander, proxied
  * */
@@ -217,25 +251,59 @@ class PExp : public PCpnp<TProv, TReq>
 	typename TScp::TPair* binded() override { return &mCnode;}
 	bool disconnect() override {
 	    bool res = TScp::disconnect();
+	    assert(res); // Debug
 	    res = res && mCnode.disconnect();
+	    assert(res); // Debug
 	    return res;
 	}
     protected:
 	Cnode mCnode;
 };
 
+/** @brief Primary DEDS. Socket, one-to-one, no Id
+ * */
+template <class TPif, class TRif>
+class PSockOnp: public PCpnp <TPif, TRif>
+{
+    public:
+	using TParent= PCpnp <TPif, TRif>;
+	using TPair= typename TParent::TPair;
 
-/** @brief Socket
+	PSockOnp(TPif* aPx): PCpnp<TPif, TRif>(aPx) {}
+	bool attach(TPair* aPair) override {
+	    bool res =  TParent::mPx->attach(*aPair->provided()) ? TParent::attach(aPair) : false;
+	    assert(res); // Debug
+	    return res;
+	}
+	bool detach(TPair* aPair) override {
+	    bool res = TParent::mPx->detach(*aPair->provided()) ? TParent::detach(aPair) : false;
+	    assert(res); // Debug
+	    return res;
+	}
+};
+
+
+
+/** @brief Extender one-to-many
  * */
 template <class TProv, class TReq>
-using PSock = PExp<TProv, TReq, PCpnp<TReq, TProv>>;
+using PExdm = PExp<TProv, TReq, PCpnp<TReq, TProv>>;
 
-/** @brief Extender
+/** @brief Extender one-to-one
  * */
 template <class TProv, class TReq>
 using PExd = PExp<TProv, TReq, PCpnp<TReq, TProv>, true>;
 
+/** @brief Aliasing base CP
+ * */
+template <class TProv, class TReq>
+using PCpOnp = PCpnpr<TProv, TReq, true>;
 
+template <class TProv, class TReq>
+using PCpOmnp = PCpnpr<TProv, TReq, false>;
+
+
+#define PCONN2_ENABLED
 
 #endif
 

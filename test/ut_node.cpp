@@ -3,7 +3,7 @@
 
 #include "pdes.h"
 #include "node.h"
-#include "pconn.h"
+#include "pconn2.h"
 
 using namespace std;
 

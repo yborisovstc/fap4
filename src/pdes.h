@@ -8,7 +8,7 @@
 #include <list>
 
 #include "mpdes.h"
-#include "pconn.h"
+#include "pconn2.h"
 
 
 /** @brief Primary DEDS base
@@ -75,7 +75,7 @@ struct PDd
 
 /** @brief Primary DEDS state output CP iface type
  * */
-template <typename T> using MPsOutp = MPc<MDesStateData<PDd<T>>, MDesInpObserver>;
+template <typename T> using MPsOutp = PCpOmnp<MDesStateData<PDd<T>>, MDesInpObserver>;
 
 /** @brief Primary DEDS state input CP iface type
  * */
@@ -90,11 +90,17 @@ class PsIcp : public PCpOnp<MDesInpObserver, MDesStateData<PDd<TInp>>> {
     public:
 	template <typename T>
 	    using TIcp = PCpOnp<MDesInpObserver, MDesStateData<PDd<T>>>;
+	using TParent = PCpOnp<MDesInpObserver, MDesStateData<PDd<TInp>>>;
+	using TRequired = MDesStateData<PDd<TInp>>;
 
 	PsIcp(MDesInpObserver* aPx) : TIcp<TInp>(aPx) {}
 	const PDd<TInp>* sData() const {
-	    auto rq = TIcp<TInp>::required();
-	    return rq ? rq->sData() : nullptr;
+	    const PDd<TInp>* res = nullptr;
+	    auto lb = TParent::leafsCbegin();
+	    if (lb != TParent::leafsCend()) {
+		res = (*lb)->provided()->sData();
+	    }
+	    return res;
 	}
 	const TInp& data() const { return sData()->mData; }
 	bool valid() const { return sData() ? sData()->mValid : false; }
@@ -313,8 +319,8 @@ class PState : public PStateBase, public MDesStateData<PDd<T>>
 
     protected:
 	void notifyInpUpdated() {
-	    for (auto p : mOcp) {
-		p->provided()->onInpUpdated();
+	    for (auto it = mOcp.leafsBegin(); it != mOcp.leafsEnd(); it++) {
+		(*it)->provided()->onInpUpdated();
 	    }
 	}
     public:

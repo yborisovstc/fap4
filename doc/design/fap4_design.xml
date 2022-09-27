@@ -85,28 +85,50 @@
 	</sect2>
     </sect1>
 
-    <sect1 id="ds_pcp"><title>Primary connection points.</title>
+    <sect1 id="ds_pn"><title>Primary net.</title>
 	<sect2><title>Intro </title>
 	    <simpara>
 		Primary CP is the key part of primary DEDS. CPs is the backbone of DEDS. CPs create treeish topology with root CP exposing provided iface
 		and the leafs representing required iface. This is the reason why this tree traversal effectiveness is so important, ref 
-		<xref linkend="ds_pcp_rsi"/> for details.
+		<xref linkend="ds_pn_rsi"/> for details.
 	    </simpara>
 	</sect2>
-	<sect2 id="ds_pcp_rsi"><title>Resolving ifaces</title>
+	<sect2 id="ds_pn_rsi"><title>Resolving ifaces</title>
 	    <simpara>
 		The primary DEDS topology for upper-level DEDS (defined by DSL) seems has be tree-ish but not primitive. In DSL DEDS (ref fap3) the problem
 		of getting the required ifaces from CP was solved by introducing
 		<xref linkend="gls_irm"/>. This mechanism seems redundant for primary DEDS so we
 		    can try to avoid using it and implement just effective ifaces pass algorithm instead.
 	    </simpara>
-	    <simpara>Ifaces pass algorithm is already used in <xref linkend="gls_irm"/>, ref fap3 IfrNode::nextLeaf() that actually uses
-		native CP method nextLeaf(). This method helps to perform tree traversal.</simpara>
+	    <simpara>Ifaces pass algorithm is already used in <xref linkend="gls_irm"/>, ref fap3 IfrNode::nextLeaf(). Note that that  <xref linkend="gls_irm"/>
+		mechanism in fact creates native treish net. To traversal thru the leafs of the trees native CP method nextLeaf() is used..
+		The problem is that this traverlal mechanism is far from optimal, ref to IfrNode::nextLeaf() implementation. To have well performance on primary
+		net we need to design effective leafs traversal mechanism.</simpara>
 	</sect2>
-	<sect2><title>Desing: can homogeneous tree be used?</title>
-	    <simpara>In fap3 the native CPs tree is geterogeneous - it combines separate types of CPs that nevetheless have same base.
+	<sect2><title>Design: can homogeneous tree be used?</title>
+	    <simpara>In fap3 the native CPs tree is heterogeneous - it combines separate types of CPs that nevetheless have same base.
 		For instance tree node NTnnp (based on one-to-one CP NCpOnp) binded CP (one-to-many NCpOmnp) can connect to another NTnnp or one-to-many
 		NCpOmnp. This works because NCpOmnp uses container of pointers to CPs base MNcpp.</simpara>
+	    <simpara>The heterogeneous nature of the tree is caused by the fact that the whole tree is combined from the segments during the
+		whole system creation.</simpara>
+	    <simpara>This heterogeneous form creates some problems with designing effective leafs traversal.</simpara>
+	    <simpara>Is it possible to have </simpara>
+	</sect2>
+	<sect2><title>Notification of net configuration changed.</title>
+	    <sect3><title>Intro</title>
+		<simpara>
+		    Primary net re-configuration affects the system built above it. So the system needs to proper react on the re-configuration event.
+		    In FAP3 native net doesn't support notification of its topology change. However in FAP3
+		    <xref linkend="gls_irm"/> there is the means
+			of notification, ref MIfReq::onProvInvalidated() and MIfProvOwner::onIfpDisconnected(), MIfProvOwner::onIfpInvalidated().
+		</simpara>
+		<simpara>What would be the mechanism of primary net update notification?</simpara>
+	    </sect3>
+	</sect2>
+	<sect2><title>Primary net node identification</title>
+	    <sect3><title>Intro</title>
+		<simpara>The nodes in primary net needs to be identified. This is ultimately required for the purpose of debugging and troubleshooting.</simpara>
+	    </sect3>
 	</sect2>
     </sect1>
 
