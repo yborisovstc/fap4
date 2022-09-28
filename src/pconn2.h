@@ -112,7 +112,7 @@ class PCpnp
 	};
     public:
 	PCpnp(TPif* aPx, bool aOto = false): mPx(aPx), mOto(aOto) {}
-	~PCpnp() { this->disconnect(); }
+	~PCpnp() { this->disconnect(); mPx = (TPif*) 0x01;}
 
 	bool connect(TPair* aPair) {
 	    assert((!mOto || pcount() == 0 ) &&  aPair && !aPair->isPair(this) && !isPair(aPair));
@@ -262,6 +262,7 @@ class PExp : public PCpnp<TProv, TReq>
 
 /** @brief Primary DEDS. Socket, one-to-one, no Id
  * */
+// TODO The problem: shared ownership of provided iface
 template <class TPif, class TRif>
 class PSockOnp: public PCpnp <TPif, TRif>
 {
@@ -280,6 +281,37 @@ class PSockOnp: public PCpnp <TPif, TRif>
 	    assert(res); // Debug
 	    return res;
 	}
+};
+
+
+/** @brief Primary DEDS. Socket, ver.02, one-to-one, no Id
+ * Avoided PSockOnp problem with shared ownership
+ *
+ * */
+template <class TPif, class TRif>
+class PSockOnp2: public PCpnp <TPif, TRif>
+{
+    public:
+	using TParent= PCpnp <TPif, TRif>;
+	using TPair= typename TParent::TPair;
+
+	PSockOnp2(): PCpnp<TPif, TRif>(&mPins) {}
+	~PSockOnp2() {
+	    // Needs preventive disconnect to disconnect pins before they are destructed
+	    this->disconnect();
+	}
+	bool attach(TPair* aPair) override {
+	    bool res =  TParent::mPx->attach(*aPair->provided()) ? TParent::attach(aPair) : false;
+	    assert(res); // Debug
+	    return res;
+	}
+	bool detach(TPair* aPair) override {
+	    bool res = TParent::mPx->detach(*aPair->provided()) ? TParent::detach(aPair) : false;
+	    assert(res); // Debug
+	    return res;
+	}
+    public:
+	TPif mPins;
 };
 
 

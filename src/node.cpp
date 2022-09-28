@@ -6,32 +6,18 @@
 
 
 Node::Node(const std::string& aName): PDes(),
-    /*mCpOwned(), mCpOwning(),*/
-    /*mCpOwned2(&mOwned2), mCpOwning2(&mOwning2),*/
-    mCpOwned3(&mOwned2), mCpOwning3(&mOwning2),
+    mCpOwned3(), mCpOwning3(),
     mCpNode(&mNode), mNode(mUri.mOcp), mOwning(mUri.mOcp), 
     mOwningUri([&]() { mOwningUri.mRes.mData = mOwningUri.Inp1.data() + mOwningUri.Inp2.data(); }),
     tOwnedId([](){})
 {
     mBcp.connect(&sName.mScp);
     sName.set(aName);
-    //mOwningUri.Inp2.connect(&sName.mOcp);
-    /*
     // Owned CP
-    mCpOwned.mId = &sName.mOcp;
-    mCpOwned.mUri = &mOwningUriTr.Inp1;
+    mOwningUriTr.Inp1.connect(mCpOwned3.mPins.mUri.binded());
+    sName.mOcp.connect(mCpOwned3.mPins.mId.binded());
     // Owning CP
-    mCpOwning.mId = &tOwnedId.Inp1;
-    mCpOwning.mUri = &mOwningUriTr.mOcp;
-    */
-    // Owned CP
-    mOwned2.mId = &sName.mOcp;
-    //mOwned2.mUri = &mOwningUriTr.Inp1;
-    mOwningUriTr.Inp1.connect(mOwned2.mUri.binded());
-    // Owning CP
-    mOwning2.mId = &tOwnedId.Inp1;
-    //mOwning2.mUri = &mOwningUriTr.mOcp;
-    mOwningUriTr.mOcp.connect(mOwning2.mUri.binded());
+    mOwningUriTr.mOcp.connect(mCpOwning3.mPins.mUri.binded());
     // Owning Uri
     mOwningUriTr.Inp2.connect(&sName.mOcp);
     mOwningUriTr.Inp3.connect(&mCpOwned3.oConnected);

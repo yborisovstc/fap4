@@ -45,8 +45,8 @@ class Node: public PDes
 	    }
 	};
 	// Interfaces proxy, needs to be placed after ifaces to keep right destruction order
-	MNnOwning<> mOwning2;
-	MNnOwning<>::TPair mOwned2;
+	//MNnOwning<> mOwning2;
+	//MNnOwning<>::TPair mOwned2;
     public:
 	// Interfaces
 	PCpOnp<MNode, MVoid> mCpNode;

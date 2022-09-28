@@ -59,12 +59,14 @@ struct MNCp: public PState<MNCp<T>*>
 #ifdef PCONN2_ENABLED
 
 template <class TPif, class TRif = typename TPif::TPair>
-struct MNCp2: public PSockOnp<TPif, TRif>, public MDesStateData<PDd<bool>>
+struct MNCp2: public PSockOnp2<TPif, TRif>, public MDesStateData<PDd<bool>>
 {
     using TSelf = MNCp2<TPif, TRif>;
-    using TParent = PSockOnp<TPif, TRif>;
+    using TParent = PSockOnp2<TPif, TRif>;
 
-    MNCp2(TPif* aPx): PSockOnp<TPif, TRif>(aPx) {}
+    MNCp2(): PSockOnp2<TPif, TRif>() {}
+    ~MNCp2() {
+    }
     void notifyConnUpdated() {
 	for (auto it = oConnected.leafsBegin(); it != oConnected.leafsEnd(); it++) {
 	    (*it)->provided()->onInpUpdated();
@@ -74,7 +76,7 @@ struct MNCp2: public PSockOnp<TPif, TRif>, public MDesStateData<PDd<bool>>
     const PsOcp<bool>::TSData* sData() const override { return &mConnected;}
     // From PSockOnp
     bool attach(typename TParent::TPair* aPair) override {
-	bool res = PSockOnp<TPif, TRif>::attach(aPair);
+	bool res = TParent::attach(aPair);
 	if (res && !mConnected.mData) {
 	    mConnected = {true, true};
 	    notifyConnUpdated();
@@ -82,7 +84,7 @@ struct MNCp2: public PSockOnp<TPif, TRif>, public MDesStateData<PDd<bool>>
 	return res;
     }
     bool detach(typename TParent::TPair* aPair) override {
-	bool res = PSockOnp<TPif, TRif>::detach(aPair);
+	bool res = TParent::detach(aPair);
 	if (res && mConnected.mData) {
 	    mConnected = {false, true};
 	    notifyConnUpdated();

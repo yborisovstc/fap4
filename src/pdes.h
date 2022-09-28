@@ -127,6 +127,15 @@ class PsOcp : public PCpOmnp<MDesStateData<PDd<TData>>, MDesInpObserver> {
 };
 
 
+#ifdef PCONN2_ENABLED
+
+template <class TData>
+using PsIex = PExd<MDesInpObserver, MDesStateData<PDd<TData>>>;
+
+template <class TData>
+using PsOex = PExd<MDesStateData<PDd<TData>>, MDesInpObserver>;
+
+#else
 /** @brief Primary state input extender
  * */
 template <class TData>
@@ -199,6 +208,7 @@ class PsOex : public PsOcp<TData>, MDesInpObserver, MDesStateData<PDd<TData>>
 	Cnode mCnode;
 };
 
+#endif // PCONN2_ENABLED
 
 
 

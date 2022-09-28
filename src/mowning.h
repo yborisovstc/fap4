@@ -87,19 +87,17 @@ struct MNnOwning {
     bool attach(TPair& aPair) {
 	bool res = true;
 	res &= mUri.attach(&aPair.mUri);
-	res &= mId->attach(aPair.mId);
+	res &= mId.attach(&aPair.mId);
 	return res;
     }
     bool detach(TPair& aPair) {
 	bool res = true;
 	res &= mUri.detach(&aPair.mUri);
-	res &= mId->detach(aPair.mId);
+	res &= mId.detach(&aPair.mId);
 	return res;
     }
 
-    //typename MPsCp<GUri, P>::Tcp* mUri;
-    typename MPsCp<std::string, Q>::Tcp* mId;
-
+    typename MPsEx<std::string, Q>::Tcp mId;
     typename MPsEx<GUri, P>::Tcp mUri;
 };
 
