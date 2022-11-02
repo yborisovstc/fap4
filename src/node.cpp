@@ -7,7 +7,6 @@
 
 Node::Node(const std::string& aName): PDes(),
     mCpOwned3(), mCpOwning3(),
-    mCpNode(&mNode), mNode(mUri.mOcp), mOwning(mUri.mOcp), 
     mOwningUri([&]() { mOwningUri.mRes.mData = mOwningUri.Inp1.data() + mOwningUri.Inp2.data(); }),
     tOwnedId([](){})
 {

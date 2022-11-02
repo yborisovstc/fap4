@@ -132,6 +132,20 @@
 	</sect2>
     </sect1>
 
+    <sect1><title>Ownership relation</title>
+	<sect2><title>Intro</title>
+	    <simpara>Ownership is required at least for the resources correct deallocation. It doesn't matter in non-reconfigured systems - in that case we establish
+		ownership on system construction. But for reconfigurable systems the ownership is needed - the elements (des, states, connpoints) are created dynamically so
+		need to be binded with ownership relation.</simpara>
+	</sect2>
+	<sect2><title>Can FAP4 primary layer be non-reconfigurable?</title>
+	    <sect3><title>Intro</title>
+		<simpara>There is still a chance that FAP4 primary layer can be non-reconfigurable.
+		    The idea is that native layer has to provide system re-configurability.</simpara>
+	    </sect3>
+	</sect2>
+    </sect1>
+
 
 
 </article>

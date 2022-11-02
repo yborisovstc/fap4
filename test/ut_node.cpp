@@ -44,7 +44,7 @@ class DesO1 : public PDesLauncher
 	Node mNode1;
 	Node mNode2;
 
-	DesO1(): PDesLauncher(), mNode1("Node1"), mNode2("Node2") {
+	DesO1(const char* aName = nullptr): PDesLauncher(aName), mNode1("Node1"), mNode2("Node2") {
 	    mBcp.connect(&mNode1.mScp);
 	    mBcp.connect(&mNode2.mScp);
 	    mNode1.mCpOwning3.connect(&mNode2.mCpOwned3);
@@ -59,7 +59,7 @@ class DesO1 : public PDesLauncher
 void Ut_node::test_owning_1()
 {
     cout << endl << "=== Test of owner-owned relation ===" << endl;
-    DesO1 des;
+    DesO1 des("Des01");
     des.Run(5, 2);
     GUri n2uri = des.mNode2.mOwningUriTr.mOcp.data();
     std::string n2uris = n2uri;

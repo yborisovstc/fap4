@@ -3,14 +3,24 @@
 
 #include "pdes.h"
 
-PDesBase::PDesBase() : mScp(this), mUpdNotified(false), mActNotified(false)
+PDesBase::PDesBase(const char* aName) : mScp(this), mUpdNotified(false), mActNotified(false), mName(aName)
 {
 }
 
-PDesBase::PDesBase(TBcp& aBcp) : mScp(this)
+PDesBase::PDesBase(TBcp& aBcp, const char* aName) : mScp(this), mName(aName)
 {
     mScp.connect(&aBcp);
     setActivated();
+}
+
+std::string PDesBase::MDesSyncable_Uid() const
+{
+    if (mScp.leafsCbegin() != mScp.leafsCend()) {
+	const MDesObserver* obs = (*mScp.leafsCbegin())->provided();
+	return obs->Uid() + "." + mName;
+    } else {
+	return mName;
+    }
 }
 
 void PDesBase::setActivated()
@@ -51,11 +61,11 @@ void PStateBase::update() {
 
 
 
-PDes::PDes(): PDesBase(), mBcp(this)
+PDes::PDes(const char* aName): PDesBase(aName), mBcp(this)
 {
 }
 
-PDes::PDes(TBcp& aBcp): PDesBase(aBcp), mBcp(this)
+PDes::PDes(TBcp& aBcp, const char* aName): PDesBase(aBcp, aName), mBcp(this)
 {
 }
 

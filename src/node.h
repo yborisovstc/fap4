@@ -12,26 +12,11 @@
 
 class Node: public PDes
 {
-    protected:
-	struct Owned : public MOwned {
-	    std::string Uid() const override { return std::string();}
-	};
-	struct Owning : public MOwner {
-	    std::string Uid() const override { return std::string();}
-	    Owning(PsOcp<GUri>& aUri): MOwner(aUri) {}
-	};
-	struct Nnode : public MNode {
-	    std::string Uid() const override { return std::string();}
-	    Nnode(PsOcp<GUri>& aUri): MNode(aUri) {}
-	};
     public:
 	Node(const std::string& aName);
     public:
 	//PState<std::string>::TOcp cpName;
 	PState<std::string> sName;
-	Owned mOwned;
-	Owning mOwning;
-	Nnode mNode;
 	class TOwningUri : public PTrans3<GUri, GUri, std::string, bool> {
 	    void doTrans() override {
 		mRes.mValid = Inp2.valid() && Inp3.valid();
@@ -49,9 +34,9 @@ class Node: public PDes
 	//MNnOwning<>::TPair mOwned2;
     public:
 	// Interfaces
-	PCpOnp<MNode, MVoid> mCpNode;
-	MNCp2<MNnOwning<>> mCpOwning3;       //!< Owning
-	MNCp2<MNnOwning<>::TPair> mCpOwned3; //!< Owned
+	MNCp2<MNnOwning<>> mCpOwning3;       //!< MOwning
+	MNCp2<MNnOwning<>::TPair> mCpOwned3; //!< MOwned
+	MNCp2<MNnNode<>> mCpNode;       //!< MNode
     private:
 	PState<GUri> mUri;
 	PTransl2<GUri, GUri, std::string> mOwningUri;

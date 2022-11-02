@@ -19,9 +19,11 @@ class PDesBase : public MDesSyncable
 	using TScp = PCpOnp<MDesSyncable, MDesObserver>; //!< Syncable CP type
 	using TBcp = TScp::TPair;                        //!< Observable CP type
     public:
-	PDesBase();
-	PDesBase(TBcp& aBcp);
+	PDesBase(const char* aName = nullptr);
+	PDesBase(TBcp& aBcp, const char* aName = nullptr);
 	~PDesBase() = default;
+	// From MDesSyncable
+	std::string MDesSyncable_Uid() const override;
     protected:
 	void setUpdated();
 	void setActivated();
@@ -30,6 +32,7 @@ class PDesBase : public MDesSyncable
     protected:
 	bool mUpdNotified;               //<! Sign of that State notified observers on Update
 	bool mActNotified;               //<! Sign of that State notified observers on Activation
+	const char* mName;
 };
 
 
@@ -38,8 +41,8 @@ class PDesBase : public MDesSyncable
 class PStateBase : public PDesBase, public MDesInpObserver
 {
     public:
-	PStateBase(): PDesBase() {}
-	PStateBase(TBcp& aBcp): PDesBase(aBcp) {}
+	PStateBase(const char* aName = nullptr): PDesBase(aName) {}
+	PStateBase(TBcp& aBcp, const char* aName = nullptr): PDesBase(aBcp, aName) {}
     public:
 	// From MDesInpObserver
 	virtual void onInpUpdated() override {
@@ -272,40 +275,10 @@ class PState : public PStateBase, public MDesStateData<PDd<T>>
     using TSData = PDd<TData>;  //!< Type of state data
     //using TOcp = PCpOmnp<MDesStateData<TSData>, MDesInpObserver>; //!< Type of output connpoint
 
-    protected:
-#if 0
-        class Ocp : public TOcp {
-	    public:
-		Ocp(MDesStateData<TSData>* aPx) : TOcp(aPx) {}
-		const PDd<TData>* sData() const {
-		    auto dp = TOcp::provided();
-		    return dp ? dp->sData() : nullptr;
-		}
-		const TData& data() const { return sData()->mData; }
-		bool valid() const { return sData() ? sData()->mValid : false; }
-		operator const TData&() const { return sData()->mData;}
-	};
-#endif
-
-#if 0
-        template <typename TInp>
-        class Icp : public TIcp<TInp> {
-	    public:
-		Icp(MDesInpObserver* aPx) : TIcp<TInp>(aPx) {}
-		const PDd<TInp>* sData() const {
-		    auto rq = TIcp<TInp>::required();
-		    return rq ? rq->sData() : nullptr;
-		}
-		const TInp& data() const { return sData()->mData; }
-		bool valid() const { return sData() ? sData()->mValid : false; }
-		operator const TInp&() const { return sData()->mData;}
-	};
-#endif
-
     public:
 	virtual ~PState() = default;
-	explicit PState();
-	explicit PState(TBcp& aBcp);
+	explicit PState(const char* aName = nullptr);
+	explicit PState(TBcp& aBcp, const char* aName = nullptr);
 	PState(const PState& aSrc);
 	PState(TBcp& aBcp, const TData& aData);
 	
@@ -342,12 +315,12 @@ class PState : public PStateBase, public MDesStateData<PDd<T>>
 };
 
 template <typename TData>
-PState<TData>::PState(): PStateBase(), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
+PState<TData>::PState(const char* aName): PStateBase(aName), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
 {
 }
 
 template <typename TData>
-PState<TData>::PState(TBcp& aBcp): PStateBase(aBcp), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
+PState<TData>::PState(TBcp& aBcp, const char* aName): PStateBase(aBcp, aName), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
 {
 }
 
@@ -380,12 +353,13 @@ class PDes : public PDesBase, public MDesObserver
     public:
 	using TObsCp = PCpOmnp<MDesObserver, MDesSyncable>; //!< Oblservable CP type
     public:
-	PDes();
-	PDes(TBcp& aBcp);
+	PDes(const char* aName = nullptr);
+	PDes(TBcp& aBcp, const char* aName = nullptr);
 	// From MDesSyncable
 	virtual void update() override;
 	virtual void confirm() override;
 	// From MDesObserver
+	std::string MDesObserver_Uid() const override { return MDesSyncable::Uid();}
 	virtual void onActivated(MDesSyncable* aComp) override;
 	virtual void onUpdated(MDesSyncable* aComp) override;
     protected:
@@ -405,7 +379,7 @@ class PDes : public PDesBase, public MDesObserver
 class PDesLauncher: public PDes, public MPdesLauncher
 {
     public:
-	PDesLauncher(): PDes(), mStop(false) {}
+	PDesLauncher(const char* aName = nullptr): PDes(aName), mStop(false) {}
 
 	// From MPDesLauncher
 	virtual bool Run(int aCount = 0, int aIdleCount = 0) override;
@@ -433,8 +407,8 @@ template <typename TData, typename TInp1>
 class PState1 : public PState<TData>
 {
     public:
-	PState1(): PState<TData>(), Inp1(this) {}
-	PState1(PDesBase::TBcp& aBcp): PState<TData>(aBcp), Inp1(this) {}
+	PState1(const char* aName = nullptr): PState<TData>(aName), Inp1(this) {}
+	PState1(PDesBase::TBcp& aBcp, const char* aName = nullptr): PState<TData>(aBcp, aName), Inp1(this) {}
 	PState1(PDesBase::TBcp& aBcp, const TData& aData): PState<TData>(aBcp, aData), Inp1(this) {}
 	PsIcp<TInp1> Inp1;
 };

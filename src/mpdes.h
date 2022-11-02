@@ -2,6 +2,8 @@
 #ifndef __NDEDS_MPDES_H
 #define __NDEDS_MPDES_H
 
+#include "miface.h"
+
 
 class MDesSyncable;
 
@@ -9,9 +11,12 @@ class MDesSyncable;
  *
  * Components notify upper layer of status changes
 * */
-class MDesObserver
+class MDesObserver: public MIface
 {
     public:
+	// From MIface
+	virtual std::string Uid() const { return MDesObserver_Uid();}
+	virtual std::string MDesObserver_Uid() const = 0;
 	/** @brief Notification that component was activated */
 	virtual void onActivated(MDesSyncable* aComp) = 0;
 	/** @brief Notification that component was changed */
@@ -47,6 +52,9 @@ class MDesStateData
 class MDesSyncable
 {
     public:
+	// From MIface
+	virtual std::string Uid() const { return MDesSyncable_Uid();}
+	virtual std::string MDesSyncable_Uid() const = 0;
 	virtual void update() = 0;
 	virtual void confirm() = 0;
 //	virtual void setUpdated() = 0;
