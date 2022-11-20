@@ -67,7 +67,7 @@ class Des1 : public PDesLauncher
 	// TODO Not supported with my current g+ version, verify on c++2a
 	// Pst2<int, int, int, [*]()->bool {return false;} > mAdd2;
 
-	Des1(const char* aName = nullptr): PDesLauncher(aName), mAdd(mBcp, "Add"), mConst_1(mBcp, 1) {
+	Des1(const char* aName = nullptr): PDesLauncher(aName), mAdd(mBcp, "Add"), mConst_1(mBcp, 1, "Const_1") {
 	    mAdd.mOcp.connect(&mAdd.mIb);
 	    mAdd.mIa.connect(&mConst_1.mOcp);
 	    mAdd.set(0);
@@ -168,3 +168,5 @@ void Ut_pdes::test_des_tr_2()
     //auto data = des.mAdd.mOcp.data();
     //CPPUNIT_ASSERT_MESSAGE("Failed running Des1", data == 5);
 }
+
+

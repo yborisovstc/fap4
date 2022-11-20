@@ -16,7 +16,7 @@ struct MIface
      * @param aInt  indentation level
      * */
     //inline void dump(int aLevel, int aIdt = 0) const { doDump(aLevel, aIdt, std::cout);}
-    //virtual void doDump(int aLevel, int aIdt, std::ostream& aOs) const {}
+    virtual void dump(int aLevel = 0xffff, int aIdt = 0, std::ostream& aOs = std::cout) const {}
 };
 
 struct MVoid : public MIface

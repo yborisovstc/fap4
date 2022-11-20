@@ -22,7 +22,7 @@ struct MNnNode {
 	return res;
     }
 
-    typename MPsEx<std::string, Q>::Tcp mNewNodeId;
+    typename MPsEx<std::string, Q>::Tcp mNewNodeId; //!< Temporary. To simulate mutation "add"
 };
 
 

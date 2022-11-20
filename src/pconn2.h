@@ -187,8 +187,15 @@ class PCpnp
 	    if (pit != pairsEnd()) {
 		TSelf* pbnd = (*pit)->binded();
 		if (pbnd) {
+		    // Node, proceed to leafs
 		    auto pli = pbnd->leafsBegin();
-		    it.mPi.splice_after(it.mPi.before_begin(), pli.mPi);
+		    if (pli != pbnd->leafsEnd()) {
+			it.mPi.splice_after(it.mPi.before_begin(), pli.mPi);
+		    }
+		} else if (!(*pit)->provided()) {
+		    // Leaf but w/o provided, omitting
+		    // Following the approach of showning all leafs. To re-consider?
+		    //it = LeafsIterator(pairsEnd(), pairsEnd());
 		}
 	    }
 	    return it;
@@ -199,8 +206,15 @@ class PCpnp
 	    if (pit != pairsCend()) {
 		TSelf* pbnd = (*pit)->binded();
 		if (pbnd) {
-		    auto pli = pbnd->leafsBegin();
-		    it.mPi.splice_after(it.mPi.before_begin(), pli.mPi);
+		    // Node, proceed to leafs
+		    auto pli = pbnd->leafsCbegin();
+		    if (pli != pbnd->leafsCend()) {
+			it.mPi.splice_after(it.mPi.before_begin(), pli.mPi);
+		    }
+		} else if (!(*pit)->provided()) {
+		    // Leaf but w/o provided, omitting
+		    // Following the approach of showning all leafs. To re-consider?
+		    //it = LeafsConstIterator(pairsCend(), pairsCend());
 		}
 	    }
 	    return it;

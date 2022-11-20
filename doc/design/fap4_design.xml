@@ -64,6 +64,12 @@
 	    <glossdef> <para>Interface resolution mechanism.  <ulink url="../../../grayb/doc/design/index.htmds_ifcache"/>
 	</para></glossdef> </glossentry>
 
+	<glossentry id="gls_dcs"><glossterm>DCS</glossterm> <acronym>DCS</acronym>
+	    <glossdef> <para>
+			DES Control of System, the mechanism of managing some subsystem by DES. 
+		    <xref linkend="ds_dcs"/> for desing details </para></glossdef>
+	</glossentry>
+
     </glossary>
 
     <sect1 id="ds_itr"><title>Intro</title>
@@ -142,6 +148,89 @@
 	    <sect3><title>Intro</title>
 		<simpara>There is still a chance that FAP4 primary layer can be non-reconfigurable.
 		    The idea is that native layer has to provide system re-configurability.</simpara>
+	    </sect3>
+	</sect2>
+    </sect1>
+
+    <sect1 id="ds_dcs"><title>DES Control of system (<xref linkend="gls_dcs"/></title>
+	<sect2><title>Intro</title>
+	    <simpara>Ref <ulink url="../../../fap3/doc/design/index.html#ds_dcs"/> for FAP3 corresponding design chapter.</simpara>
+	</sect2>
+	<sect2 id="ds_dcs_cl"><title>DES control layers</title>
+	    <sect3 id="ds_dcs_cl_itr"><title>Intro</title>
+		<simpara>It was earlier agreed that the complex system that includes DES controlling needs to be layered,
+		    ref <ulink url="../../../fap3/doc/design/index.html#ds_dcs_sl"/> </simpara>
+		<simpara>It was already discussed in scope of FAP3 (ref <ulink url="../../../fap3/doc/design/index.html#ds_dcs_sl"/>)
+		    of how update-confirm schema has to be applied to the system that includes not just
+		    simple data layer but the number of controlling layers. It was agreed that each layer needs to have "isolated" update/confirm
+		    phases to avoid non-deterministic behavior. Note that current FAP3 solution doesn't follow this design, instead,
+		    system structure change happens on confirm phase, ref  <ulink url="../../../fap3/doc/design/index.html#ds_dcs_ucs_cip"/>.
+		</simpara>
+		<simpara>It is still the question of how to design the layers. Currently in FAP3 the layers are not really isolated. They are
+		    mixed instead: one DES owns both controlling and regular states/DES.</simpara>
+	    </sect3>
+	    <sect3 id="ds_dcs_cl_wilw"><title>Will isolated update/confirm really work for controlling?</title>
+		<sect4><title>Intro</title>
+		    <simpara>
+			The doubt here is that update/confirm is well suitable for simple data, i.e. the data that
+			can be renewed by simple copying (note that data confirmation is just copying updated data to the confirmed one.
+			But for controlling it is not true: the data managed is complex, it cannot be simply copied to be actualized (confirmed).
+			What update/confirm phases mean in that case? One solution is to represent the managed data via simple data, ref
+			<xref linkend="ds_dcs_cl_wilw_rvsd"/>.
+		    </simpara>
+		</sect4>
+		<sect4><title>Do we really need isolated update/confirm for controlling</title>
+		    <simpara>There is no clear use-cases at the moment. Generic thought is that without isolation the system behaviour will be
+			non-deterministic. Lets assume that there is the system and controlling state CS within it. The order of CS and other syncables of system
+			is not deterministic: it is not guaranteed that for instance CS update will be performed first. Note that CS can change system syncables. So
+			there will be different effects for the case "CS first" and "syncables first". </simpara>
+		</sect4>
+		<sect4 id="ds_dcs_cl_wilw_rvsd"><title>Solution. Managing single controlled data directly via API. Representing the managed data via simple data.</title>
+		    <simpara>The idea is that we don't follow standard state desing having separate "updated" and "confirmed" data.
+			Instead we have only single system structure data. The <emphasis>system structure data is controlled via native API</emphasis>
+			(for instance the CP of DES observer/DES syncable is controlled via CP API).
+			In the same time the dependencies of other controlling states on this system structure data can
+			be represented simply by some parameters of the system structure data (for instance "pointer to added syncable).</simpara>
+		    <simpara>Having isolated update/confirm stage is important here. Let's look at the example.
+			The controlling state is adding some state to controlled DES. Controlling state creates new state and directly modifies controlled DES
+			observer/syncable CP by adding new state to CP's pairs. But this will cause new state immediatelly reporting "on activated"
+			event from newly connected syncable to DES. With isolated update/confirm the DES will add syncable to the "lower level" list of
+			"active" syncables and will not update new syncable immediatelly. Otherwise (if we were avoid using isolated update/confirm) the DES
+			would perform the update of new syncable immediately - this means that the controlling action will interfere with date update.</simpara>
+		    <simpara>How do we avoid interfering controlling states updates? Just via representing the managed system structure date via simple parameters
+			(i.e. pure data) that is confirmed on confirmation phase. So other controling data will get activated on confirmation phase only.</simpara>
+		</sect4>
+		<sect4><title>Solution. Dealing with system structure data as with regular data.</title>
+		    <simpara>There is still the possibility of changing of system structure data as regular data. Let's consider the case discussed
+			in <xref linkend="ds_dcs_cl_wilw_rvsd"/> - changing of DES "observer/syncable" CP. What we need to do in this case is to
+		    adapt syncable connections to double buffering scheme. TBD. </simpara>
+		</sect4>
+	    </sect3>
+	    <sect3 id="ds_dcs_cl_wilw_idb"><title>Using inputs double buffering instead of data double buffering.</title>
+		<simpara>As it was mentioned in <xref linkend="ds_dcs_cl_itr"/> in fap3 the controlling is performed on confirmation phase.
+		    Actually it is input double buffering design, where on update phase the inputs are buffered (because they can be changed on confirm phase),
+		    but on confirm phase the data is actually updated.</simpara>
+		<simpara>This is the solution alternative to base solution where the data update is performed on update phase, for instance the 
+		    solution <xref linkend="ds_dcs_cl_wilw_rvsd"/></simpara>
+		<simpara>Pros of this solution is that system structure complicated data double buffering is not always necessary - input data is
+		    often simple data so it doesn't cause any problems to double buffer them.</simpara>
+		<simpara>Cons of the solution is a bit overhead in inputs double buffering - there can be duplication of buffers in case if
+		    same state output connects to the number of inputs.</simpara>
+	    </sect3>
+	    <sect3 id="ds_dcs_cl_ddc"><title>Option#1. Dedicated state/DES for controlling </title>
+		<sect4><title>Intro</title>
+		    <simpara>One design option of "isolating" controlling </simpara>
+		</sect4>
+	    </sect3>
+	</sect2>
+    </sect1>
+
+    <sect1 id="ds_i"><title>Issues</title>
+	<sect2 id="ds_i_01"><title>[I_01] Active list is not updated when active syncable has been deleted.</title>
+	    <sect3><title>Description</title>
+		<simpara>There is some DES and syncable X. Syncable X gets active, it notifies DES (as oblerver) - DES adds X to the list of active syncable.
+		    Some controlling causes syncable X deletion - X doensn't notify DES of deletion (because there is not such DES observer APIs) - next update phase
+		    DES calls X update - exception occurs.</simpara>
 	    </sect3>
 	</sect2>
     </sect1>

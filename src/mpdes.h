@@ -49,12 +49,14 @@ class MDesStateData
 /** @brief Interface of DES syncable
  * */
 // TODO do we need set* here, the mehods are for internal use
-class MDesSyncable
+class MDesSyncable: public MIface
 {
     public:
 	// From MIface
 	virtual std::string Uid() const { return MDesSyncable_Uid();}
 	virtual std::string MDesSyncable_Uid() const = 0;
+	void dump(int aLevel = 0xffff, int aIdt = 0, std::ostream& aOs = std::cout) const override { MDesSyncable_dump(aLevel, aIdt, aOs);}
+	virtual void MDesSyncable_dump(int aLevel = 0xffff, int aIdt = 0, std::ostream& aOs = std::cout) const = 0;
 	virtual void update() = 0;
 	virtual void confirm() = 0;
 //	virtual void setUpdated() = 0;

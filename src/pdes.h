@@ -16,14 +16,15 @@
 class PDesBase : public MDesSyncable
 {
     public:
-	using TScp = PCpOnp<MDesSyncable, MDesObserver>; //!< Syncable CP type
-	using TBcp = TScp::TPair;                        //!< Observable CP type
+	using TScp = PCpOnp<MDesSyncable, MDesObserver>; //!< DES Syncable CP type
+	using TBcp = TScp::TPair;                        //!< DES Observer CP type
     public:
-	PDesBase(const char* aName = nullptr);
-	PDesBase(TBcp& aBcp, const char* aName = nullptr);
+	PDesBase(const std::string& aName = std::string());
+	PDesBase(TBcp& aBcp, const std::string& aName = std::string());
 	~PDesBase() = default;
 	// From MDesSyncable
 	std::string MDesSyncable_Uid() const override;
+	void MDesSyncable_dump(int aLevel = 0xffff, int aIdt = 0, std::ostream& aOs = std::cout) const override;
     protected:
 	void setUpdated();
 	void setActivated();
@@ -32,7 +33,7 @@ class PDesBase : public MDesSyncable
     protected:
 	bool mUpdNotified;               //<! Sign of that State notified observers on Update
 	bool mActNotified;               //<! Sign of that State notified observers on Activation
-	const char* mName;
+	std::string mName;
 };
 
 
@@ -41,8 +42,8 @@ class PDesBase : public MDesSyncable
 class PStateBase : public PDesBase, public MDesInpObserver
 {
     public:
-	PStateBase(const char* aName = nullptr): PDesBase(aName) {}
-	PStateBase(TBcp& aBcp, const char* aName = nullptr): PDesBase(aBcp, aName) {}
+	PStateBase(const std::string& aName = std::string()): PDesBase(aName) {}
+	PStateBase(TBcp& aBcp, const std::string& aName = std::string()): PDesBase(aBcp, aName) {}
     public:
 	// From MDesInpObserver
 	virtual void onInpUpdated() override {
@@ -101,7 +102,11 @@ class PsIcp : public PCpOnp<MDesInpObserver, MDesStateData<PDd<TInp>>> {
 	    const PDd<TInp>* res = nullptr;
 	    auto lb = TParent::leafsCbegin();
 	    if (lb != TParent::leafsCend()) {
-		res = (*lb)->provided()->sData();
+		auto prov = (*lb)->provided();
+		// TODO We keep the approach to traversal all the leafs of the tree even
+		// those that doesn't have iface provider. To consider the alternative
+		// approach - to traversal thru leafs provideng ifaces only.
+		res = prov ? prov->sData() : nullptr;
 	    }
 	    return res;
 	}
@@ -238,7 +243,6 @@ template <typename T> struct MPsEx<T, tag_inp> { using Tcp =  PsIex<T>; };
 /** @brief Primary layer. Transition.
  * It is usable if system exposes not state but just transition over its boundary
  * */
-
 template <typename T>
 class PTrans : public MDesInpObserver, public MDesStateData<PDd<T>>
 {
@@ -277,10 +281,10 @@ class PState : public PStateBase, public MDesStateData<PDd<T>>
 
     public:
 	virtual ~PState() = default;
-	explicit PState(const char* aName = nullptr);
-	explicit PState(TBcp& aBcp, const char* aName = nullptr);
+	explicit PState(const std::string& aName = std::string());
+	explicit PState(TBcp& aBcp, const std::string& aName = std::string());
 	PState(const PState& aSrc);
-	PState(TBcp& aBcp, const TData& aData);
+	PState(TBcp& aBcp, const TData& aData, const std::string& aName );
 	
 	void set(const TData& aData) {
 	    mUdata->mData = aData; mUdata->mValid = true;
@@ -315,12 +319,12 @@ class PState : public PStateBase, public MDesStateData<PDd<T>>
 };
 
 template <typename TData>
-PState<TData>::PState(const char* aName): PStateBase(aName), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
+PState<TData>::PState(const std::string& aName): PStateBase(aName), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
 {
 }
 
 template <typename TData>
-PState<TData>::PState(TBcp& aBcp, const char* aName): PStateBase(aBcp, aName), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
+PState<TData>::PState(TBcp& aBcp,const std::string& aName): PStateBase(aBcp, aName), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
 {
 }
 
@@ -332,7 +336,7 @@ PState<TData>::PState(const PState& aSrc): PState()
 }
 
 template <typename TData>
-PState<TData>::PState(TBcp& aBcp, const TData& aData): PState(aBcp)
+PState<TData>::PState(TBcp& aBcp, const TData& aData,const std::string& aName): PState(aBcp, aName)
 {
     set(aData);
 }
@@ -344,6 +348,37 @@ PState<TData>::PState(PState&& aSrc): mUdata(aSrc.mUdata), mCdata(aSrc.mCdata)
 }
 */
 
+/** @brief Data in DEDS of primary level
+ * Doesn't participate in DEDS update process but just keeps a data
+ * @param T  type of state data
+ * */
+template <typename T>
+class PData : public MDesStateData<PDd<T>>
+{
+    public:
+	using TData = T;        //!< Type of data
+	using TSData = PDd<TData>;  //!< Type of state data
+
+    public:
+	virtual ~PData() = default;
+	explicit PData(const std::string& aName = std::string()): mName(aName), mOcp(this) {}
+	explicit PData(const TData& aData, const std::string& aName): PData(aName) {
+	    set(aData);
+	}
+
+	void set(const TData& aData) {
+	    mData.mData = aData; mData.mValid = true;
+	}
+	// From MDesStateData
+	virtual const TSData* sData() const { return &mData;}
+    public:
+	PsOcp<TData> mOcp;     //!< Output connpoint
+    protected:
+	std::string mName;
+	TSData  mData;
+};
+
+
 
 
 /** @brief Primary discrete events dynasystem
@@ -351,17 +386,19 @@ PState<TData>::PState(PState&& aSrc): mUdata(aSrc.mUdata), mCdata(aSrc.mCdata)
 class PDes : public PDesBase, public MDesObserver
 {
     public:
-	using TObsCp = PCpOmnp<MDesObserver, MDesSyncable>; //!< Oblservable CP type
+	using TObsCp = PCpOmnp<MDesObserver, MDesSyncable>; //!< DES Oblserver CP type
     public:
-	PDes(const char* aName = nullptr);
-	PDes(TBcp& aBcp, const char* aName = nullptr);
+	PDes(const std::string& aName = std::string());
+	PDes(TBcp& aBcp, const std::string& aName = std::string());
 	// From MDesSyncable
 	virtual void update() override;
 	virtual void confirm() override;
 	// From MDesObserver
 	std::string MDesObserver_Uid() const override { return MDesSyncable::Uid();}
+	void MDesSyncable_dump(int aLevel = 0xffff, int aIdt = 0, std::ostream& aOs = std::cout) const override;
 	virtual void onActivated(MDesSyncable* aComp) override;
 	virtual void onUpdated(MDesSyncable* aComp) override;
+	// Local
     protected:
 	/** @brief Adds syncable */
 	void addSnc(PDesBase& aSnc) {
@@ -370,7 +407,7 @@ class PDes : public PDesBase, public MDesObserver
     protected:
 	std::list<MDesSyncable*> mActive;     /*!< Active compoments */
 	std::list<MDesSyncable*> mUpdated;     /*!< Updated compoments */
-	TObsCp mBcp;  //!< Observable CP
+	TObsCp mBcp;  //!< DES Observer CP
 };
 
 /** @brief Launcher of DES
@@ -379,7 +416,7 @@ class PDes : public PDesBase, public MDesObserver
 class PDesLauncher: public PDes, public MPdesLauncher
 {
     public:
-	PDesLauncher(const char* aName = nullptr): PDes(aName), mStop(false) {}
+	PDesLauncher(const std::string& aName = std::string()): PDes(aName), mStop(false) {}
 
 	// From MPDesLauncher
 	virtual bool Run(int aCount = 0, int aIdleCount = 0) override;
@@ -407,8 +444,8 @@ template <typename TData, typename TInp1>
 class PState1 : public PState<TData>
 {
     public:
-	PState1(const char* aName = nullptr): PState<TData>(aName), Inp1(this) {}
-	PState1(PDesBase::TBcp& aBcp, const char* aName = nullptr): PState<TData>(aBcp, aName), Inp1(this) {}
+	PState1(const std::string& aName = std::string()): PState<TData>(aName), Inp1(this) {}
+	PState1(PDesBase::TBcp& aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this) {}
 	PState1(PDesBase::TBcp& aBcp, const TData& aData): PState<TData>(aBcp, aData), Inp1(this) {}
 	PsIcp<TInp1> Inp1;
 };
@@ -420,10 +457,21 @@ class PState2 : public PState<TData>
 {
     public:
 	PState2(): PState<TData>(), Inp1(this), Inp2(this) {}
-	PState2(PDesBase::TBcp& aBcp): PState<TData>(aBcp), Inp1(this), Inp2(this) {}
+	PState2(PDesBase::TBcp& aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this), Inp2(this) {}
 	PsIcp<TInp1> Inp1;
 	PsIcp<TInp2> Inp2;
 };
+
+template <typename TData, typename TInp1, typename TInp2, typename TInp3>
+class PState3 : public PState<TData>
+{
+    public:
+	PState3(PDesBase::TBcp& aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this), Inp2(this), Inp3(this) {}
+	PsIcp<TInp1> Inp1;
+	PsIcp<TInp2> Inp2;
+	PsIcp<TInp3> Inp3;
+};
+
 
 // TODO Using parameter pack?
 template <typename TData, typename... TInps>

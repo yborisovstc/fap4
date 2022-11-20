@@ -3,11 +3,11 @@
 
 #include "pdes.h"
 
-PDesBase::PDesBase(const char* aName) : mScp(this), mUpdNotified(false), mActNotified(false), mName(aName)
+PDesBase::PDesBase(const std::string& aName) : mScp(this), mUpdNotified(false), mActNotified(false), mName(aName)
 {
 }
 
-PDesBase::PDesBase(TBcp& aBcp, const char* aName) : mScp(this), mName(aName)
+PDesBase::PDesBase(TBcp& aBcp, const std::string& aName) : mScp(this), mName(aName)
 {
     mScp.connect(&aBcp);
     setActivated();
@@ -15,11 +15,22 @@ PDesBase::PDesBase(TBcp& aBcp, const char* aName) : mScp(this), mName(aName)
 
 std::string PDesBase::MDesSyncable_Uid() const
 {
+    std::string res;
     if (mScp.leafsCbegin() != mScp.leafsCend()) {
 	const MDesObserver* obs = (*mScp.leafsCbegin())->provided();
-	return obs->Uid() + "." + mName;
+	res = obs->Uid() + ".";
+    }
+    res += mName.empty() ? "?" : mName;
+    return res;
+}
+
+void PDesBase::MDesSyncable_dump(int aLevel, int aIdt, std::ostream& aOs) const
+{
+    if (aIdt == 0) {
+	aOs << "UID: " << MDesSyncable_Uid() << std::endl;
     } else {
-	return mName;
+	std::string idt(aIdt*4, ' ');
+	aOs << idt << (mName.empty() ? "?" : mName) << std::endl;
     }
 }
 
@@ -61,11 +72,11 @@ void PStateBase::update() {
 
 
 
-PDes::PDes(const char* aName): PDesBase(aName), mBcp(this)
+PDes::PDes(const std::string& aName): PDesBase(aName), mBcp(this)
 {
 }
 
-PDes::PDes(TBcp& aBcp, const char* aName): PDesBase(aBcp, aName), mBcp(this)
+PDes::PDes(TBcp& aBcp, const std::string& aName): PDesBase(aBcp, aName), mBcp(this)
 {
 }
 
@@ -116,6 +127,21 @@ void PDes::onUpdated(MDesSyncable* aComp)
 	}
 #endif
 	mUpdated.push_back(aComp);
+    }
+}
+
+
+void PDes::MDesSyncable_dump(int aLevel, int aIdt, std::ostream& aOs) const
+{
+    if (aIdt == 0) {
+	aOs << "UID: " << MDesSyncable_Uid() << std::endl;
+    } else {
+	std::string idt(aIdt*4, ' ');
+	aOs << idt << mName << std::endl;
+    }
+    for (auto it = mBcp.pairsCbegin(); it != mBcp.pairsCend(); it++) {
+	auto scb = (*it)->provided();
+	scb->MDesSyncable_dump(aLevel, aIdt + 1, aOs);
     }
 }
 
