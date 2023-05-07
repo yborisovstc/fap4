@@ -3,7 +3,7 @@
 <!DOCTYPE article SYSTEM "/usr/share/sgml/docbook/dtd/xml/4.5/docbookx.dtd">
 
 
-<article status="draft" class="specification"> <title>Discrete Events Dynamics System (DEDS) native framework. Design.</title>
+<article status="draft" class="specification"> <title>Discrete Events Dynamics System (DEDS) framework, ver.4. Design.</title>
 
     <articleinfo>
 	<author><personname><firstname>Yuri</firstname><surname>Borisov</surname></personname>
@@ -93,6 +93,8 @@
 
     <sect1 id="ds_pn"><title>Primary net.</title>
 	<sect2><title>Intro </title>
+	    <simpara>Primary net is the base layer of the system. It can be seen as the layer that supports native heir layer. FAP3 doesn't have
+		primary net but implements native net directly.</simpara>
 	    <simpara>
 		Primary CP is the key part of primary DEDS. CPs is the backbone of DEDS. CPs create treeish topology with root CP exposing provided iface
 		and the leafs representing required iface. This is the reason why this tree traversal effectiveness is so important, ref 
@@ -103,7 +105,7 @@
 	    <simpara>
 		The primary DEDS topology for upper-level DEDS (defined by DSL) seems has be tree-ish but not primitive. In DSL DEDS (ref fap3) the problem
 		of getting the required ifaces from CP was solved by introducing
-		<xref linkend="gls_irm"/>. This mechanism seems redundant for primary DEDS so we
+		<xref linkend="gls_irm"/>. This mechanism seems redundant (primary net topology is expected to be simple) for primary DEDS so we
 		    can try to avoid using it and implement just effective ifaces pass algorithm instead.
 	    </simpara>
 	    <simpara>Ifaces pass algorithm is already used in <xref linkend="gls_irm"/>, ref fap3 IfrNode::nextLeaf(). Note that that  <xref linkend="gls_irm"/>
@@ -138,9 +140,13 @@
 	</sect2>
     </sect1>
 
-    <sect1><title>Ownership relation</title>
+    <sect1 id="ds_nh"><title>Native hierarchy. Ownership relation</title>
 	<sect2><title>Intro</title>
-	    <simpara>Ownership is required at least for the resources correct deallocation. It doesn't matter in non-reconfigured systems - in that case we establish
+	    <simpara>Native hierarchy is required to identify the nodes of the system. Why we need this identification? We need it to create and configure the system.
+		Using mutations we need to specify the nodes in the system. Native hierarchy is created basing on ownership relation that generates treeish topology, to 
+		the path on the treee can be used to identify any node. Treeish nature is also usefull to represent the system for human mind - it is represented
+		quite simply.</simpara>
+	    <simpara>Another reason the ownership is required at least for the resources correct deallocation. It doesn't matter in non-reconfigured systems - in that case we establish
 		ownership on system construction. But for reconfigurable systems the ownership is needed - the elements (des, states, connpoints) are created dynamically so
 		need to be binded with ownership relation.</simpara>
 	</sect2>
@@ -150,9 +156,52 @@
 		    The idea is that native layer has to provide system re-configurability.</simpara>
 	    </sect3>
 	</sect2>
+	<sect2 id="ds_nh_ni"><title>Native hier node identification</title>
+	    <sect3><title>Intro</title>
+		<simpara>The node in native hier is used the owend node name to recognize the node via ownership relation. There can be two approaches:</simpara>
+		<itemizedlist>
+		    <listitem>
+			Name as the attribut of the node
+			<para>Node posesses its name inherently. This mean that event the node is not included into native hier the node HAS the name.</para>
+		    </listitem>
+		    <listitem>
+			    Name as the attribute of the relation
+			<para>The node has the name in the context of the relation. This mean that whithout relation the node is unnamed. Only when 
+			    ownership relation is established the node "posesses" the name. The owned node name in this case is just the name the owning node uses
+			    to identify the owned node.</para>
+		    </listitem>
+		</itemizedlist>
+		<simpara>Currently (fap3) the approach "Name as the attribut of the node" is used. Needs to think of another approach desing analysis.</simpara>
+	    </sect3>
+	    <sect3><title>Name as the attribute of the relation</title>
+		<sect4><title>Cons: problem with getting identification from given node.</title>
+		    <simpara>UC: some cliento of native hier node N want's to get the name (or URI) of N. With this approach we 
+			are faicing implementatin trouble here - node needs to ask it's owning for that (node doesn't posess the name).
+			Owning node needs to look up the name from ownership CP table and names table. Not effective.</simpara>
+		    <simpara>The solution would be just owning to copy name helper to owned. This helper can be simply the name
+			(the question is what this solutions differs from "Name as the attribut of the node" - the diff is that Owned doesn't 
+			own (hehe) this data.). The helper can be owned index in the "Using auto-indexed arrays for ownership connection" design
+			(ref <ulink url="../../../fap3/doc/design/index.html#ds_nn_abo"/> for details).</simpara>
+		    <simpara>Another solution (far from ideal) is to use find method of array. </simpara>
+		</sect4>
+	    </sect3>
+	</sect2>
     </sect1>
 
-    <sect1 id="ds_dcs"><title>DES Control of system (<xref linkend="gls_dcs"/></title>
+    <sect1><title>Native hier. Observing. Notifications.</title>
+	<sect2><title>Intro</title>
+	    <simpara>
+		It is common case when native agents observes other native agents. The examples are FAP3 SDO and SDC. FAP3 provides very beginning means
+		of observing - native agents observation mechanism that uses relation MObserver-MObservable. However this mechanism simplicity doens't allow to 
+		create complex observations. Ref for instance
+		<ulink url="../../../fap3/doc/design/index.html#ds_iss_015"/> that stated that observation of existence of some indirect owned is required but
+		    the FAP3 current observation means allows to observe the only direct owned attached/detached.
+	    </simpara>
+	    <simpara>FAP3 observation mechanism was simplified intentionally to avoid FAP2 pure performance because of notifications.</simpara>
+	</sect2>
+    </sect1>
+
+    <sect1 id="ds_dcs"><title>DES Control of system (<xref linkend="gls_dcs"/>)</title>
 	<sect2><title>Intro</title>
 	    <simpara>Ref <ulink url="../../../fap3/doc/design/index.html#ds_dcs"/> for FAP3 corresponding design chapter.</simpara>
 	</sect2>
@@ -186,11 +235,14 @@
 			there will be different effects for the case "CS first" and "syncables first". </simpara>
 		</sect4>
 		<sect4 id="ds_dcs_cl_wilw_rvsd"><title>Solution. Managing single controlled data directly via API. Representing the managed data via simple data.</title>
-		    <simpara>The idea is that we don't follow standard state desing having separate "updated" and "confirmed" data.
-			Instead we have only single system structure data. The <emphasis>system structure data is controlled via native API</emphasis>
-			(for instance the CP of DES observer/DES syncable is controlled via CP API).
-			In the same time the dependencies of other controlling states on this system structure data can
-			be represented simply by some parameters of the system structure data (for instance "pointer to added syncable).</simpara>
+		    <simpara>
+			The idea is that we don't follow standard state desing having separate "updated" and "confirmed" data.
+			Instead we have only single system structure data. The
+			<emphasis>system structure data is controlled via native API</emphasis>
+			    (for instance the CP of DES observer/DES syncable is controlled via CP API).
+			    In the same time the dependencies of other controlling states on this system structure data can
+			    be represented simply by some parameters of the system structure data (for instance "pointer to added syncable).
+		    </simpara>
 		    <simpara>Having isolated update/confirm stage is important here. Let's look at the example.
 			The controlling state is adding some state to controlled DES. Controlling state creates new state and directly modifies controlled DES
 			observer/syncable CP by adding new state to CP's pairs. But this will cause new state immediatelly reporting "on activated"
@@ -201,9 +253,11 @@
 			(i.e. pure data) that is confirmed on confirmation phase. So other controling data will get activated on confirmation phase only.</simpara>
 		</sect4>
 		<sect4><title>Solution. Dealing with system structure data as with regular data.</title>
-		    <simpara>There is still the possibility of changing of system structure data as regular data. Let's consider the case discussed
-			in <xref linkend="ds_dcs_cl_wilw_rvsd"/> - changing of DES "observer/syncable" CP. What we need to do in this case is to
-		    adapt syncable connections to double buffering scheme. TBD. </simpara>
+		    <simpara>
+			There is still the possibility of changing of system structure data as regular data. Let's consider the case discussed in
+			<xref linkend="ds_dcs_cl_wilw_rvsd"/> - changing of DES "observer/syncable" CP. What we need to do in this case is to
+			    adapt syncable connections to double buffering scheme. TBD.
+		    </simpara>
 		</sect4>
 	    </sect3>
 	    <sect3 id="ds_dcs_cl_wilw_idb"><title>Using inputs double buffering instead of data double buffering.</title>
@@ -216,12 +270,21 @@
 		    often simple data so it doesn't cause any problems to double buffer them.</simpara>
 		<simpara>Cons of the solution is a bit overhead in inputs double buffering - there can be duplication of buffers in case if
 		    same state output connects to the number of inputs.</simpara>
+		<simpara>In fact this variant is generally same as <xref linkend="ds_dcs_cl_wilw_rvsd"/>: the difference is the phase where structure data
+		    is updated: update or confirm.</simpara>
 	    </sect3>
 	    <sect3 id="ds_dcs_cl_ddc"><title>Option#1. Dedicated state/DES for controlling </title>
 		<sect4><title>Intro</title>
 		    <simpara>One design option of "isolating" controlling </simpara>
 		</sect4>
 	    </sect3>
+	</sect2>
+    </sect1>
+
+    <sect1><title>Interface resoltion</title>
+	<sect2><title>Intro</title>
+	    <simpara>There is serious problem with performance caused by IRM, ref <ulink url="../../../fap3/doc/requirements/index.html#ds_irm_wprc"/></simpara>
+	    <simpara>This problem needs to be handled.</simpara>
 	</sect2>
     </sect1>
 
