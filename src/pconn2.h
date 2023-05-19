@@ -24,8 +24,6 @@ class PCpnp
     public:
 	using TSelf= PCpnp<TPif, TRif>;
 	using TPair= PCpnp<TRif, TPif>;
-	//using TSelf= typename MPc<TPif, TRif>::TSelf;
-	//using TPair= typename MPc<TPif, TRif>::TPair;
 	using TPairs = std::set<TPair*>;
 	using TPairsIterator = typename TPairs::iterator;
 	using TPairsConstIterator = typename TPairs::const_iterator;
@@ -165,22 +163,6 @@ class PCpnp
 	TPairsConstIterator pairsCbegin() const { return mPairs.cbegin(); }
 	TPairsConstIterator pairsCend() const { return mPairs.cend(); }
 	LeafsIterator leafsEnd() { return LeafsIterator(pairsEnd(), pairsEnd()); }
-	/* Ver.01
-	LeafsIterator leafsBegin() {
-	    LeafsIterator it;
-	    TPairsIterator pit = pairsBegin();
-	    if (pit != pairsEnd()) {
-		TSelf* pbnd = (*pit)->binded();
-		if (!pbnd) {
-		    it.mPi.push_front(pit);
-		} else {
-		    auto pli = pbnd->leafsBegin();
-		    it.mPi.splice_after(it.mPi.before_begin(), pli.mPi);
-		}
-	    }
-	    return it;
-	}
-	*/
 	LeafsIterator leafsBegin() {
 	    TPairsIterator pit = pairsBegin();
 	    LeafsIterator it(pit, pairsEnd());

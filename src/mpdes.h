@@ -3,6 +3,7 @@
 #define __NDEDS_MPDES_H
 
 #include "miface.h"
+#include "pconn2.h"
 
 
 class MDesSyncable;
@@ -61,6 +62,20 @@ class MDesSyncable: public MIface
 	virtual void confirm() = 0;
 //	virtual void setUpdated() = 0;
 //	virtual void setActivated() = 0;
+};
+
+/** @brief Controlled interface for DES observer
+ * */
+class MCtdDesobs : public MIface
+{
+    public:
+	// From MIface
+	virtual std::string Uid() const { return std::string();}
+	void dump(int aLevel = 0xffff, int aIdt = 0, std::ostream& aOs = std::cout) const override { }
+	// Local
+	virtual bool addSyncable(PCpOnp<MDesSyncable, MDesObserver>* aSnc) = 0;
+	virtual bool isSyncableIncluded(PCpOnp<MDesSyncable, MDesObserver>* aSnc) const = 0;
+	virtual bool isSyncableIncluded(std::string aSncName) const = 0;
 };
 
 /** @brief Model launcher interface

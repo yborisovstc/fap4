@@ -20,7 +20,7 @@ class PDesBase : public MDesSyncable
 	using TBcp = TScp::TPair;                        //!< DES Observer CP type
     public:
 	PDesBase(const std::string& aName = std::string());
-	PDesBase(TBcp& aBcp, const std::string& aName = std::string());
+	PDesBase(TBcp* aBcp, const std::string& aName = std::string());
 	~PDesBase() = default;
 	// From MDesSyncable
 	std::string MDesSyncable_Uid() const override;
@@ -43,7 +43,7 @@ class PStateBase : public PDesBase, public MDesInpObserver
 {
     public:
 	PStateBase(const std::string& aName = std::string()): PDesBase(aName) {}
-	PStateBase(TBcp& aBcp, const std::string& aName = std::string()): PDesBase(aBcp, aName) {}
+	PStateBase(TBcp* aBcp, const std::string& aName = std::string()): PDesBase(aBcp, aName) {}
     public:
 	// From MDesInpObserver
 	virtual void onInpUpdated() override {
@@ -102,7 +102,8 @@ class PsIcp : public PCpOnp<MDesInpObserver, MDesStateData<PDd<TInp>>> {
 	    const PDd<TInp>* res = nullptr;
 	    auto lb = TParent::leafsCbegin();
 	    if (lb != TParent::leafsCend()) {
-		auto prov = (*lb)->provided();
+		auto lbv = *lb;
+		auto* prov = lbv->provided();
 		// TODO We keep the approach to traversal all the leafs of the tree even
 		// those that doesn't have iface provider. To consider the alternative
 		// approach - to traversal thru leafs provideng ifaces only.
@@ -282,10 +283,10 @@ class PState : public PStateBase, public MDesStateData<PDd<T>>
     public:
 	virtual ~PState() = default;
 	explicit PState(const std::string& aName = std::string());
-	explicit PState(TBcp& aBcp, const std::string& aName = std::string());
+	explicit PState(TBcp* aBcp, const std::string& aName = std::string());
 	PState(const PState& aSrc);
-	PState(TBcp& aBcp, const TData& aData, const std::string& aName );
-	
+	PState(TBcp* aBcp, const TData& aData, const std::string& aName );
+
 	void set(const TData& aData) {
 	    mUdata->mData = aData; mUdata->mValid = true;
 	    mCdata->mData = aData; mCdata->mValid = true;
@@ -295,10 +296,11 @@ class PState : public PStateBase, public MDesStateData<PDd<T>>
 	virtual void confirm() override {
 	    mUpdNotified = false;
 	    // Swap the data and notify observer
+	    // TODO Notify on data changed only
 	    std::swap(mCdata, mUdata);
 	    notifyInpUpdated();
 	}
-	
+
 	// From MDesStateData
 	virtual const TSData* sData() const { return mCdata;}
 	// From PStateBase
@@ -324,7 +326,7 @@ PState<TData>::PState(const std::string& aName): PStateBase(aName), mUdata(&mDat
 }
 
 template <typename TData>
-PState<TData>::PState(TBcp& aBcp,const std::string& aName): PStateBase(aBcp, aName), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
+PState<TData>::PState(TBcp* aBcp,const std::string& aName): PStateBase(aBcp, aName), mUdata(&mDataP), mCdata(&mDataQ), mOcp(this)
 {
 }
 
@@ -336,7 +338,7 @@ PState<TData>::PState(const PState& aSrc): PState()
 }
 
 template <typename TData>
-PState<TData>::PState(TBcp& aBcp, const TData& aData,const std::string& aName): PState(aBcp, aName)
+PState<TData>::PState(TBcp* aBcp, const TData& aData,const std::string& aName): PState(aBcp, aName)
 {
     set(aData);
 }
@@ -389,7 +391,7 @@ class PDes : public PDesBase, public MDesObserver
 	using TObsCp = PCpOmnp<MDesObserver, MDesSyncable>; //!< DES Oblserver CP type
     public:
 	PDes(const std::string& aName = std::string());
-	PDes(TBcp& aBcp, const std::string& aName = std::string());
+	PDes(TBcp* aBcp, const std::string& aName = std::string());
 	// From MDesSyncable
 	virtual void update() override;
 	virtual void confirm() override;
@@ -445,8 +447,8 @@ class PState1 : public PState<TData>
 {
     public:
 	PState1(const std::string& aName = std::string()): PState<TData>(aName), Inp1(this) {}
-	PState1(PDesBase::TBcp& aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this) {}
-	PState1(PDesBase::TBcp& aBcp, const TData& aData): PState<TData>(aBcp, aData), Inp1(this) {}
+	PState1(PDesBase::TBcp* aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this) {}
+	PState1(PDesBase::TBcp* aBcp, const TData& aData): PState<TData>(aBcp, aData), Inp1(this) {}
 	PsIcp<TInp1> Inp1;
 };
 
@@ -457,7 +459,7 @@ class PState2 : public PState<TData>
 {
     public:
 	PState2(): PState<TData>(), Inp1(this), Inp2(this) {}
-	PState2(PDesBase::TBcp& aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this), Inp2(this) {}
+	PState2(PDesBase::TBcp* aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this), Inp2(this) {}
 	PsIcp<TInp1> Inp1;
 	PsIcp<TInp2> Inp2;
 };
@@ -466,7 +468,7 @@ template <typename TData, typename TInp1, typename TInp2, typename TInp3>
 class PState3 : public PState<TData>
 {
     public:
-	PState3(PDesBase::TBcp& aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this), Inp2(this), Inp3(this) {}
+	PState3(PDesBase::TBcp* aBcp, const std::string& aName = std::string()): PState<TData>(aBcp, aName), Inp1(this), Inp2(this), Inp3(this) {}
 	PsIcp<TInp1> Inp1;
 	PsIcp<TInp2> Inp2;
 	PsIcp<TInp3> Inp3;
@@ -525,5 +527,67 @@ class PTransl2 : public PTrans<TData>
 };
 
 
+/** @brief System dynamic controller (SDC) base.
+ * The key element of layered system control (LSC)
+ * Performs given controlled system target modification
+ * Outputs target query
+ * */
+class PSdcBase : public PDesBase, public MDesInpObserver, public MDesStateData<PDd<bool>>
+{
+    public:
+	PSdcBase(const std::string& aName = std::string()): PDesBase(aName), mOutp(this), mInpEnb(this) {}
+	PSdcBase(TBcp* aBcp, const std::string& aName = std::string()): PDesBase(aBcp, aName), mOutp(this), mInpEnb(this) {}
+    public:
+	// From MDesInpObserver
+	virtual void onInpUpdated() override {
+	    setActivated();
+	}
+	// From MDesStateData
+	virtual const PDd<bool>* sData() const {
+	    bool st = false;
+	    getStatus();
+	    return &mStatus;
+	}
+    protected:
+	/** @brief Perform state transition
+	 * @return sing of success
+	 * */
+	virtual bool doCtl() { return false;}
+	/** @brief Gets target query result
+	 * @return sing of success
+	 * */
+	virtual bool getStatus() const {return false;}
+	// From MDesSyncable
+	virtual void update() override {
+	}
+	virtual void confirm() override {}
+    public:
+	PDd<bool> mStatus;
+	PsOcp<bool> mOutp;  //<! Input "Enable controlling"
+	PsIcp<bool> mInpEnb;  //<! Input "Enable controlling"
+};
+
+/** @brief System dynamic controller (SDC) base.
+ * */
+template <typename T>
+class PSdc : public PSdcBase
+{
+    public:
+	using TControlled = T;        //!< Type of controlled system
+    public:
+	PSdc(TControlled* aCtd, const std::string& aName = std::string()): PSdcBase(aName), mCtd(aCtd) {}
+	PSdc(PDesBase::TBcp* aBcp, TControlled* aCtd, const std::string& aName = std::string()): PSdcBase(aBcp, aName), mCtd(aCtd) {}
+    protected:
+	TControlled* mCtd;    //<! Controlled system
+};
+
+template <typename T, typename TInp1>
+class PSdc1 : public PSdc<T>
+{
+    public:
+	PSdc1(T* aCtd, const std::string& aName = std::string()): PSdc<T>(aCtd, aName), Inp1(this) {}
+	PSdc1(PDesBase::TBcp* aBcp, T* aCtd, const std::string& aName = std::string()): PSdc<T>(aBcp, aCtd, aName), Inp1(this) {}
+	PsIcp<TInp1> Inp1;
+};
 
 #endif

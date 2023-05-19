@@ -98,7 +98,10 @@ struct MNnOwning {
     }
 
     typename MPsEx<std::string, Q>::Tcp mId;
-    typename MPsEx<GUri, P>::Tcp mUri;
+    typename MPsEx<GUri, P>::Tcp mUri;              //!< Owning URI, output
+    typename MPsEx<std::string, P>::Tcp mNewNodeId; //!< Embedding MNode, ref ds_nh_mnode_emb. Temporary. To simulate mutation "add"
+    // TODO There was the idea to "embed" Des Obsr-Obsbl connection into Owning conn. Disabled atm, to re-consider
+    //PExdm<MDesSyncable, MDesObserver> mPdObs;  //<! Primary DES observer, o-o self and o-m embedded cp
 };
 
 

@@ -10,7 +10,7 @@ using namespace std;
 class Ut_pdes : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(Ut_pdes);
-//    CPPUNIT_TEST(test_des_tr_1);
+    CPPUNIT_TEST(test_des_tr_1);
     CPPUNIT_TEST(test_des_tr_2);
     CPPUNIT_TEST_SUITE_END();
     public:
@@ -38,7 +38,7 @@ void Ut_pdes::tearDown()
 class SAdd : public PState<int>
 {
     public:
-	SAdd(TBcp& aBcp, const char* aName = nullptr): PState<int>(aBcp, aName), mIa(this), mIb(this) {}
+	SAdd(TBcp* aBcp, const char* aName = nullptr): PState<int>(aBcp, aName), mIa(this), mIb(this) {}
     protected:
 	virtual void doTrans() override {
 	    mUdata->mValid = mIa.valid() && mIb.valid();
@@ -67,7 +67,7 @@ class Des1 : public PDesLauncher
 	// TODO Not supported with my current g+ version, verify on c++2a
 	// Pst2<int, int, int, [*]()->bool {return false;} > mAdd2;
 
-	Des1(const char* aName = nullptr): PDesLauncher(aName), mAdd(mBcp, "Add"), mConst_1(mBcp, 1, "Const_1") {
+	Des1(const char* aName = nullptr): PDesLauncher(aName), mAdd(&mBcp, "Add"), mConst_1(&mBcp, 1, "Const_1") {
 	    mAdd.mOcp.connect(&mAdd.mIb);
 	    mAdd.mIa.connect(&mConst_1.mOcp);
 	    mAdd.set(0);
@@ -116,7 +116,7 @@ void Ut_pdes::test_des_tr_1()
 
 struct SPrint : public PState1<int, int>
 {
-    SPrint(PDesBase::TBcp& aBcp, const char* aName = nullptr): PState1(aBcp, aName) {}
+    SPrint(PDesBase::TBcp aBcp, const char* aName = nullptr): PState1(&aBcp, aName) {}
     void doTrans() override {
 	mUdata->mValid = Inp1.valid();
 	//mUdata->mData = Inp1.data();
@@ -129,7 +129,7 @@ using TPtri = PCpnp<MDesInpObserver, MDesStateData<PDd<int>>>;
 class SCreateChain : public PState<TPtri*>
 {
     public:
-	SCreateChain(TBcp& aBcp, const char* aName = nullptr): PState<TPtri*>(aBcp, aName), mInp(this) {}
+	SCreateChain(TBcp aBcp, const char* aName = nullptr): PState<TPtri*>(&aBcp, aName), mInp(this) {}
     protected:
 	virtual void doTrans() override {
 	    TPtri* newnode = new PsIex<int>();

@@ -12,8 +12,8 @@ using namespace std;
 class Ut_node : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(Ut_node);
-//    CPPUNIT_TEST(test_owning_1);
-    CPPUNIT_TEST(test_add_owned);
+    CPPUNIT_TEST(test_owning_1);
+//    CPPUNIT_TEST(test_add_owned);
     CPPUNIT_TEST_SUITE_END();
     public:
     virtual void setUp();
@@ -45,11 +45,11 @@ class DesO1 : public PDesLauncher
     public:
 	Node mNode1;
 	Node mNode2;
+	Node mNode3;
 
-	DesO1(const char* aName = nullptr): PDesLauncher(aName), mNode1(mBcp, "Node1"), mNode2(mBcp, "Node2") {
-	    mBcp.connect(&mNode1.mScp);
-	    mBcp.connect(&mNode2.mScp);
-	    mNode1.mCpOwning3.connect(&mNode2.mCpOwned3);
+	DesO1(const char* aName = nullptr): PDesLauncher(aName), mNode1(&mBcp, "Node1"), mNode2(&mBcp, "Node2"), mNode3(&mBcp, "Node3") {
+	    mNode1.mBase.mCpOwning.connect(&mNode2.mCpOwned);
+	    mNode1.mBase.mCpOwning.connect(&mNode3.mCpOwned);
 	}
 };
 
@@ -63,7 +63,7 @@ void Ut_node::test_owning_1()
     cout << endl << "=== Test of owner-owned relation ===" << endl;
     DesO1 des("Des01");
     des.Run(5, 2);
-    GUri n2uri = des.mNode2.mOwningUriTr.mOcp.data();
+    GUri n2uri = des.mNode2.trOwningUri.mOcp.data();
     std::string n2uris = n2uri;
     CPPUNIT_ASSERT_MESSAGE("Failed running DesO1", n2uris == "Node1.Node2");
     //des.mNode1.mCpOwning3.disconnect();
@@ -77,10 +77,18 @@ void Ut_node::test_owning_1()
 class DesO2 : public PDesLauncher
 {
     public:
-	Node mNode1;
+	class Node1 : public Node {
+	    public:
+		Node1(TBcp* aBcp, const std::string& aName): Node(aBcp, aName) {
+		}
+	};
+    public:
+	Node1 mNode1;
 
-	DesO2(const char* aName = nullptr): PDesLauncher(aName), mNode1(mBcp,"Node1") {
+	DesO2(const char* aName = nullptr): PDesLauncher(aName), mNode1(&mBcp,"Node1"), sNewNodeId(std::string("Node2"), std::string("name")) {
+	    mNode1.mCpOwned.mPins.mNewNodeId.connect(&sNewNodeId.mOcp);
 	}
+	PData<std::string> sNewNodeId;
 };
 
 
@@ -91,10 +99,10 @@ void Ut_node::test_add_owned()
 {
     cout << endl << "=== Test of adding owned ===" << endl;
     DesO2 des("Des02");
-    PData<std::string> newNodeId(std::string("Node2"), std::string("name"));
-    MNCp2<MNnNode<tag_inp, tag_outp>> cpNode;
-    newNodeId.mOcp.connect(cpNode.mPins.mNewNodeId.binded());
-    des.mNode1.mCpNode.connect(&cpNode);
+    //PData<std::string> newNodeId(std::string("Node2"), std::string("name"));
+    //MNCp2<MNnNode<tag_inp, tag_outp>> cpNode;
+    //newNodeId.mOcp.connect(cpNode.mPins.mNewNodeId.binded());
+    //des.mNode1.mCpNode.connect(&cpNode);
     des.Run(5, 2);
     des.MDesSyncable_dump(0, 0);
     //CPPUNIT_ASSERT_MESSAGE("Failed running DesO1", n2uris == "Node1.Node2");

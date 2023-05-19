@@ -7,10 +7,12 @@ PDesBase::PDesBase(const std::string& aName) : mScp(this), mUpdNotified(false), 
 {
 }
 
-PDesBase::PDesBase(TBcp& aBcp, const std::string& aName) : mScp(this), mName(aName)
+PDesBase::PDesBase(TBcp* aBcp, const std::string& aName) : mScp(this), mName(aName)
 {
-    mScp.connect(&aBcp);
-    setActivated();
+    if (aBcp) {
+	mScp.connect(aBcp);
+	setActivated();
+    }
 }
 
 std::string PDesBase::MDesSyncable_Uid() const
@@ -76,7 +78,7 @@ PDes::PDes(const std::string& aName): PDesBase(aName), mBcp(this)
 {
 }
 
-PDes::PDes(TBcp& aBcp, const std::string& aName): PDesBase(aBcp, aName), mBcp(this)
+PDes::PDes(TBcp* aBcp, const std::string& aName): PDesBase(aBcp, aName), mBcp(this)
 {
 }
 

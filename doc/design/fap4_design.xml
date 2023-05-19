@@ -136,11 +136,21 @@
 	<sect2><title>Primary net node identification</title>
 	    <sect3><title>Intro</title>
 		<simpara>The nodes in primary net needs to be identified. This is ultimately required for the purpose of debugging and troubleshooting.</simpara>
+		<simpara>Do we need unmodified id (const char*) or modifiable (std::string) ? For primary purpose unmodified ID is enough.</simpara>
+	    </sect3>
+	</sect2>
+	<sect2><title>Shall primary net topology replicate native net structure?</title>
+	    <sect3><title>Intro</title>
+		<simpara>Currently the "obvious" approach is used: primary net follow native net structure. It means that if N1 owns N2 then N1 primary DES is
+		    primary DES observer of N2 primary DES.</simpara>
+		<simpara>But is this approach inevitable? Why don't use "flat" structure where there is primary root and all primary DES are syncable of it?
+		    There are some problems with that approach. The one of them is that there could be active subsystem embedded into the given system. This subystem actually is 
+		    DES laucher. In that case we will need primary root in this launcher.</simpara>
 	    </sect3>
 	</sect2>
     </sect1>
 
-    <sect1 id="ds_nh"><title>Native hierarchy. Ownership relation</title>
+    <sect1 id="ds_nh"><title>Native hierarchy. Node. Ownership relation</title>
 	<sect2><title>Intro</title>
 	    <simpara>Native hierarchy is required to identify the nodes of the system. Why we need this identification? We need it to create and configure the system.
 		Using mutations we need to specify the nodes in the system. Native hierarchy is created basing on ownership relation that generates treeish topology, to 
@@ -155,10 +165,14 @@
 		<simpara>There is still a chance that FAP4 primary layer can be non-reconfigurable.
 		    The idea is that native layer has to provide system re-configurability.</simpara>
 	    </sect3>
+	    <sect3><title>Primary net is global, so it should be configurable.</title>
+		<simpara>Primary net covers the whole system. This means that is shall be configurable at least in point of primary DES observable/syncable tree. When
+		    new native node is added it means that new primary DES (node is implemented as primary DES) is added into primary observable/syncable tree.</simpara>
+	    </sect3>
 	</sect2>
 	<sect2 id="ds_nh_ni"><title>Native hier node identification</title>
 	    <sect3><title>Intro</title>
-		<simpara>The node in native hier is used the owend node name to recognize the node via ownership relation. There can be two approaches:</simpara>
+		<simpara>The node in native hier is used the owned node name to recognize the node via ownership relation. There can be two approaches:</simpara>
 		<itemizedlist>
 		    <listitem>
 			Name as the attribut of the node
@@ -183,6 +197,22 @@
 			own (hehe) this data.). The helper can be owned index in the "Using auto-indexed arrays for ownership connection" design
 			(ref <ulink url="../../../fap3/doc/design/index.html#ds_nn_abo"/> for details).</simpara>
 		    <simpara>Another solution (far from ideal) is to use find method of array. </simpara>
+		</sect4>
+	    </sect3>
+	</sect2>
+	<sect2 id="ds_nh_mnode"><title>Are FAP3 "one-way" relation interfaces like "MNode" still acceptable in FAP4?</title>
+	    <sect3><title>Intro</title>
+		<simpara>There are "one-way" relations interfaces in FAP3. They (like MNode) provide clients with "services" - important parts of nodes behaviour.
+		    Normal use-case is that client obtains form instance MNode interface via local interfaces resolution mechanism os via IRM and then call the iface methods.</simpara>
+		<simpara>This desing approach is clear but FAP4 design phylosophy says that the primary interface is DES that assumes the primary connection for "request"
+		    some agent: again the connection but not dynamically resolved interface.</simpara>
+	    </sect3>
+	    <sect3 id="ds_nh_mnode_emb"><title>Option: move MNode to MOwned </title>
+		<sect4><title>Intro</title>
+		    <simpara>In fact MNode interface is actually the interface of Owned in native hier. MNode methods can be interpret as intended for Owning to
+			manage Owned. The only exceptional use-case is delegatng controlling to some other node, not owning. This is form instance
+			SDC approach where controller obtains access to some native node via delagation from real owner.</simpara>
+		    <simpara>So the option is to embed MNode to MOwned.</simpara>
 		</sect4>
 	    </sect3>
 	</sect2>
@@ -216,7 +246,8 @@
 		    system structure change happens on confirm phase, ref  <ulink url="../../../fap3/doc/design/index.html#ds_dcs_ucs_cip"/>.
 		</simpara>
 		<simpara>It is still the question of how to design the layers. Currently in FAP3 the layers are not really isolated. They are
-		    mixed instead: one DES owns both controlling and regular states/DES.</simpara>
+		    mixed instead: one DES owns both controlling and regular states/DES. UPDATE: FAP3 now has extended MDesSyncable iface so can 
+		    support "right" layered controlling approach, ref <ulink url="../../../fap3/doc/design/index.html#ds_dcs_sl_lsc"/></simpara>
 	    </sect3>
 	    <sect3 id="ds_dcs_cl_wilw"><title>Will isolated update/confirm really work for controlling?</title>
 		<sect4><title>Intro</title>
@@ -275,13 +306,13 @@
 	    </sect3>
 	    <sect3 id="ds_dcs_cl_ddc"><title>Option#1. Dedicated state/DES for controlling </title>
 		<sect4><title>Intro</title>
-		    <simpara>One design option of "isolating" controlling </simpara>
+		    <simpara>One design option of "isolating" controlling DES according to FAP3 solution <ulink url="../../../fap3/doc/design/index.html#ds_dcs_sl_lsc"/></simpara>
 		</sect4>
 	    </sect3>
 	</sect2>
     </sect1>
 
-    <sect1><title>Interface resoltion</title>
+    <sect1><title>Interface resolution</title>
 	<sect2><title>Intro</title>
 	    <simpara>There is serious problem with performance caused by IRM, ref <ulink url="../../../fap3/doc/requirements/index.html#ds_irm_wprc"/></simpara>
 	    <simpara>This problem needs to be handled.</simpara>
