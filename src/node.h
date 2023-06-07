@@ -9,7 +9,7 @@
 #include "mnode.h"
 #include "nconn.h"
 
-#if 0
+#if 0 // Migrating to controller-controlled design
 class Node: public PDes
 {
     public:
@@ -132,7 +132,7 @@ class MCtdNodeOwning : public MIface
 	virtual std::string Uid() const { return std::string();}
 	void dump(int aLevel = 0xffff, int aIdt = 0, std::ostream& aOs = std::cout) const override { }
 	// Local
-	virtual bool addOwned(MNCp2<MNnOwning<>::TPair>* aCpOwned) = 0;
+	virtual bool addOwned(MNCp3<MNnOwning<>::TPair, MNnOwning<>, true>* aCpOwned) = 0;
 	virtual bool isOwnedAttached(std::string aOwdName) const = 0;
 };
 
@@ -157,7 +157,7 @@ class NodeBase: public PDes
 		    }
 		}
 		// From MCtdNodeOwning
-		virtual bool addOwned(MNCp2<MNnOwning<>::TPair>* aCpOwned) override {
+		virtual bool addOwned(MNCp3<MNnOwning<>::TPair, MNnOwning<>, true>* aCpOwned) override {
 		    bool res = false;
 		    // Connect to Owning
 		    res = mHost->mCpOwning.connect(aCpOwned);
@@ -183,7 +183,7 @@ class NodeBase: public PDes
 		    }
 		}
 		// From MCtdDesobs
-		virtual bool addSyncable(PCpOnp<MDesSyncable, MDesObserver>* aSnc) override {
+		virtual bool addSyncable(PCpOnp2<MDesSyncable, MDesObserver>* aSnc) override {
 		    bool res = false;
 		    res = mHost->mBcp.connect(aSnc);
 		    return res;
@@ -206,7 +206,8 @@ class NodeBase: public PDes
 	//std::string MDesSyncable_Uid() const override;
     public:
 	// Interfaces
-	MNCp2<MNnOwning<>> mCpOwning;       //!< MOwning connpoint
+	//MNCp2<MNnOwning<>> mCpOwning;       //!< MOwning connpoint
+	MNCp3<MNnOwning<>> mCpOwning;       //!< MOwning connpoint
 	CtdNodeOwning mCtdOwning;           //!< Controlled Node Owning
 	CtdDesObs mCtdDesObs;               //!< Controlled Des observer
 };
@@ -286,7 +287,8 @@ class Node: public PDes
 	PState<std::string> sName;
 	TOwningUri trOwningUri;             //!< Transition "Owning URI"
 	// Interfaces
-	MNCp2<MNnOwning<>::TPair> mCpOwned; //!< MOwned connpoint
+	//MNCp2<MNnOwning<>::TPair, MNnOwning<>, true> mCpOwned; //!< MOwned connpoint
+	MNCp3<MNnOwning<>::TPair, MNnOwning<>, true> mCpOwned; //!< MOwned connpoint
 	//MNCp2<MNnOwning<>> mCpOwning;       //!< MOwning connpoint, one-to-many
     protected:
 	//PSdc1<NodeBase, std::string> cAddOwned;       //!< Controller "Add Owned"

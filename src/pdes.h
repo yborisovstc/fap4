@@ -16,7 +16,8 @@
 class PDesBase : public MDesSyncable
 {
     public:
-	using TScp = PCpOnp<MDesSyncable, MDesObserver>; //!< DES Syncable CP type
+	//PP using TScp = PCpOnp<MDesSyncable, MDesObserver>; //!< DES Syncable CP type
+	using TScp = PCpOnp2<MDesSyncable, MDesObserver>; //!< DES Syncable CP type
 	using TBcp = TScp::TPair;                        //!< DES Observer CP type
     public:
 	PDesBase(const std::string& aName = std::string());
@@ -79,22 +80,22 @@ struct PDd
 
 /** @brief Primary DEDS state output CP iface type
  * */
-template <typename T> using MPsOutp = PCpOmnp<MDesStateData<PDd<T>>, MDesInpObserver>;
+template <typename T> using MPsOutp = PCpOmnp2<MDesStateData<PDd<T>>, MDesInpObserver>;
 
 /** @brief Primary DEDS state input CP iface type
  * */
-template <typename T> using MPsInp = PCpOnp<MDesInpObserver, MDesStateData<PDd<T>>>;
+template <typename T> using MPsInp = PCpOnp2<MDesInpObserver, MDesStateData<PDd<T>>>;
 
 
 // TODO Needs to introdice the notification of inp observer of CP connect/disconnect
 /** @brief Primary DEDS State input CP
  * */
 template <typename TInp>
-class PsIcp : public PCpOnp<MDesInpObserver, MDesStateData<PDd<TInp>>> {
+class PsIcp : public PCpOnp2<MDesInpObserver, MDesStateData<PDd<TInp>>> {
     public:
 	template <typename T>
-	    using TIcp = PCpOnp<MDesInpObserver, MDesStateData<PDd<T>>>;
-	using TParent = PCpOnp<MDesInpObserver, MDesStateData<PDd<TInp>>>;
+	    using TIcp = PCpOnp2<MDesInpObserver, MDesStateData<PDd<T>>>;
+	using TParent = PCpOnp2<MDesInpObserver, MDesStateData<PDd<TInp>>>;
 	using TRequired = MDesStateData<PDd<TInp>>;
 
 	PsIcp(MDesInpObserver* aPx) : TIcp<TInp>(aPx) {}
@@ -119,11 +120,11 @@ class PsIcp : public PCpOnp<MDesInpObserver, MDesStateData<PDd<TInp>>> {
 /** @brief Primary DEDS State output CP
  * */
 template <typename TData>
-class PsOcp : public PCpOmnp<MDesStateData<PDd<TData>>, MDesInpObserver> {
+class PsOcp : public PCpOmnp2<MDesStateData<PDd<TData>>, MDesInpObserver> {
     public:
 	using TSData = PDd<TData>;  //!< Type of state data
 	template <typename T>
-	    using TOcp = PCpOmnp<MDesStateData<PDd<T>>, MDesInpObserver>;
+	    using TOcp = PCpOmnp2<MDesStateData<PDd<T>>, MDesInpObserver>;
 
 	PsOcp(MDesStateData<TSData>* aPx) : TOcp<TData>(aPx) {}
 	const PDd<TData>* sData() const {
@@ -139,10 +140,10 @@ class PsOcp : public PCpOmnp<MDesStateData<PDd<TData>>, MDesInpObserver> {
 #ifdef PCONN2_ENABLED
 
 template <class TData>
-using PsIex = PExd<MDesInpObserver, MDesStateData<PDd<TData>>>;
+using PsIex = PExd2<MDesInpObserver, MDesStateData<PDd<TData>>>;
 
 template <class TData>
-using PsOex = PExd<MDesStateData<PDd<TData>>, MDesInpObserver>;
+using PsOex = PExd2<MDesStateData<PDd<TData>>, MDesInpObserver>;
 
 #else
 /** @brief Primary state input extender
@@ -388,7 +389,8 @@ class PData : public MDesStateData<PDd<T>>
 class PDes : public PDesBase, public MDesObserver
 {
     public:
-	using TObsCp = PCpOmnp<MDesObserver, MDesSyncable>; //!< DES Oblserver CP type
+	//PP using TObsCp = PCpOmnp<MDesObserver, MDesSyncable>; //!< DES Oblserver CP type
+	using TObsCp = PCpOmnp2<MDesObserver, MDesSyncable>; //!< DES Oblserver CP type
     public:
 	PDes(const std::string& aName = std::string());
 	PDes(TBcp* aBcp, const std::string& aName = std::string());

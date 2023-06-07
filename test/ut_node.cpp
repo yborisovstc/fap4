@@ -46,10 +46,13 @@ class DesO1 : public PDesLauncher
 	Node mNode1;
 	Node mNode2;
 	Node mNode3;
+	bool m2to3Connected = false;
 
 	DesO1(const char* aName = nullptr): PDesLauncher(aName), mNode1(&mBcp, "Node1"), mNode2(&mBcp, "Node2"), mNode3(&mBcp, "Node3") {
 	    mNode1.mBase.mCpOwning.connect(&mNode2.mCpOwned);
 	    mNode1.mBase.mCpOwning.connect(&mNode3.mCpOwned);
+	    // Exceptional case: attempt to make mNode3 owned twice
+	    m2to3Connected = mNode2.mBase.mCpOwning.connect(&mNode3.mCpOwned);
 	}
 };
 
@@ -62,6 +65,7 @@ void Ut_node::test_owning_1()
 {
     cout << endl << "=== Test of owner-owned relation ===" << endl;
     DesO1 des("Des01");
+    CPPUNIT_ASSERT_MESSAGE("Node3 is owned twice", !des.m2to3Connected);
     des.Run(5, 2);
     GUri n2uri = des.mNode2.trOwningUri.mOcp.data();
     std::string n2uris = n2uri;

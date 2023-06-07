@@ -3,11 +3,11 @@
 
 #include "pdes.h"
 
-PDesBase::PDesBase(const std::string& aName) : mScp(this), mUpdNotified(false), mActNotified(false), mName(aName)
+PDesBase::PDesBase(const std::string& aName) : PDesBase(nullptr, aName)
 {
 }
 
-PDesBase::PDesBase(TBcp* aBcp, const std::string& aName) : mScp(this), mName(aName)
+PDesBase::PDesBase(TBcp* aBcp, const std::string& aName) : mScp(this), mUpdNotified(false), mActNotified(false), mName(aName)
 {
     if (aBcp) {
 	mScp.connect(aBcp);
@@ -41,7 +41,7 @@ void PDesBase::setActivated()
     if (!mActNotified) {
 	// Propagate activation to owner
 	if (mScp.pairsBegin() != mScp.pairsEnd()) {
-	    auto rq = (*mScp.pairsBegin())->provided();
+	    auto rq = mScp.pairsBegin()->second->provided();
 	    rq->onActivated(this);
 	    mActNotified = true;
 	}
@@ -53,7 +53,7 @@ void PDesBase::setUpdated()
     if (!mUpdNotified) {
 	// Propagate update to owner
 	if (mScp.pairsBegin() != mScp.pairsEnd()) {
-	    auto rq = (*mScp.pairsBegin())->provided();
+	    auto rq = mScp.pairsBegin()->second->provided();
 	    rq->onUpdated(this);
 	    mUpdNotified = true;
 	}
@@ -141,10 +141,28 @@ void PDes::MDesSyncable_dump(int aLevel, int aIdt, std::ostream& aOs) const
 	std::string idt(aIdt*4, ' ');
 	aOs << idt << mName << std::endl;
     }
-    for (auto it = mBcp.pairsCbegin(); it != mBcp.pairsCend(); it++) {
-	auto scb = (*it)->provided();
-	scb->MDesSyncable_dump(aLevel, aIdt + 1, aOs);
+    if (aLevel & 0x01) {
+	aOs << "Syncable:" << std::endl;
+	for (auto it = mBcp.pairsCbegin(); it != mBcp.pairsCend(); it++) {
+	    auto scb = it->second->provided();
+	    scb->MDesSyncable_dump(0x01, aIdt + 1, aOs);
+	}
     }
+    if (aLevel & 0x02) {
+	aOs << "Active:" << std::endl;
+	for (auto it = mActive.begin(); it != mActive.end(); it++) {
+	    auto* scb = *it;
+	    scb->MDesSyncable_dump(0x02, aIdt + 1, aOs);
+	}
+    }
+    if (aLevel & 0x04) {
+	aOs << "Updated:" << std::endl;
+	for (auto it = mUpdated.begin(); it != mUpdated.end(); it++) {
+	    auto* scb = *it;
+	    scb->MDesSyncable_dump(0x04, aIdt + 1, aOs);
+	}
+    }
+
 }
 
 

@@ -58,13 +58,13 @@ struct MNCp: public PState<MNCp<T>*>
 
 #ifdef PCONN2_ENABLED
 
-template <class TPif, class TRif = typename TPif::TPair>
-struct MNCp2: public PSockOnp2<TPif, TRif>, public MDesStateData<PDd<bool>>
+template <class TPif, class TRif = typename TPif::TPair, bool VOto = false>
+struct MNCp2: public PSockOnp2<TPif, TRif, VOto>, public MDesStateData<PDd<bool>>
 {
     using TSelf = MNCp2<TPif, TRif>;
-    using TParent = PSockOnp2<TPif, TRif>;
+    using TParent = PSockOnp2<TPif, TRif, VOto>;
 
-    MNCp2(): PSockOnp2<TPif, TRif>() {}
+    MNCp2(): PSockOnp2<TPif, TRif, VOto>() {}
     ~MNCp2() {
     }
     void notifyConnUpdated() {
@@ -95,6 +95,50 @@ struct MNCp2: public PSockOnp2<TPif, TRif>, public MDesStateData<PDd<bool>>
     PsOcp<bool>::TSData mConnected{ false, true};
     PsOcp<bool> oConnected{this};
 };
+
+
+/** @brief Native connpoint base, v.0.3 PCpp based, Id
+ * Native connpoint is primary net socket of pins - PState inp/outp
+ * */
+template <class TPif, class TRif = typename TPif::TPair, bool VOto = false>
+struct MNCp3: public PSockP2<TPif, TRif, true, VOto>, public MDesStateData<PDd<bool>>
+{
+    using TSelf = MNCp2<TPif, TRif>;
+    using TParent = PSockP2<TPif, TRif, true, VOto>;
+
+    MNCp3(): PSockP2<TPif, TRif, true, VOto>() {}
+    ~MNCp3() {
+    }
+    void notifyConnUpdated() {
+	for (auto it = oConnected.leafsBegin(); it != oConnected.leafsEnd(); it++) {
+	    (*it)->provided()->onInpUpdated();
+	}
+    }
+    // From MDesStateData
+    const PsOcp<bool>::TSData* sData() const override { return &mConnected;}
+    // From PSockOnp
+    bool attach(typename TParent::TPair* aPair) override {
+	bool res = TParent::attach(aPair);
+	if (res && !mConnected.mData) {
+	    mConnected = {true, true};
+	    notifyConnUpdated();
+	}
+	return res;
+    }
+    bool detach(typename TParent::TPair* aPair) override {
+	bool res = TParent::detach(aPair);
+	if (res && mConnected.mData) {
+	    mConnected = {false, true};
+	    notifyConnUpdated();
+	}
+	return res;
+    }
+
+    PsOcp<bool>::TSData mConnected{ false, true};
+    PsOcp<bool> oConnected{this};
+};
+
+
 
 #else
 /** @brief Native connpoint base, PState socket based

@@ -66,6 +66,7 @@ Node::Node(TBcp* aBcp, const std::string& aName): PDes(aBcp, aName),
     sName.set(aName);
     // Owning CP
     mBase.mCpOwning.mPins.mUri.binded()->connect(&trOwningUri.mOcp);
+    sName.mOcp.connect(mCpOwned.mPins.mId.binded());
     // Controller AddOutput
     cAddOwned.Inp1.connect(&mBase.mCtdOwning);
     cAddOwned.Inp2.connect(&mBase.mCtdDesObs);

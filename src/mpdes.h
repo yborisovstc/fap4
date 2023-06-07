@@ -73,7 +73,7 @@ class MCtdDesobs : public MIface
 	virtual std::string Uid() const { return std::string();}
 	void dump(int aLevel = 0xffff, int aIdt = 0, std::ostream& aOs = std::cout) const override { }
 	// Local
-	virtual bool addSyncable(PCpOnp<MDesSyncable, MDesObserver>* aSnc) = 0;
+	virtual bool addSyncable(PCpOnp2<MDesSyncable, MDesObserver>* aSnc) = 0;
 	virtual bool isSyncableIncluded(PCpOnp<MDesSyncable, MDesObserver>* aSnc) const = 0;
 	virtual bool isSyncableIncluded(std::string aSncName) const = 0;
 };

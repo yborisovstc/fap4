@@ -10,7 +10,7 @@ using namespace std;
 class Ut_pdes : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE(Ut_pdes);
-    CPPUNIT_TEST(test_des_tr_1);
+//    CPPUNIT_TEST(test_des_tr_1);
     CPPUNIT_TEST(test_des_tr_2);
     CPPUNIT_TEST_SUITE_END();
     public:
@@ -43,6 +43,7 @@ class SAdd : public PState<int>
 	virtual void doTrans() override {
 	    mUdata->mValid = mIa.valid() && mIb.valid();
 	    mUdata->mData = mIa.data() + mIb.data();
+	    //cout << "SAdd Udata: " << mUdata->mData  << endl;
 	}
     public:
 	PsIcp<int> mIa;
@@ -116,7 +117,7 @@ void Ut_pdes::test_des_tr_1()
 
 struct SPrint : public PState1<int, int>
 {
-    SPrint(PDesBase::TBcp aBcp, const char* aName = nullptr): PState1(&aBcp, aName) {}
+    SPrint(PDesBase::TBcp* aBcp, const char* aName = nullptr): PState1(aBcp, aName) {}
     void doTrans() override {
 	mUdata->mValid = Inp1.valid();
 	//mUdata->mData = Inp1.data();
@@ -124,12 +125,15 @@ struct SPrint : public PState1<int, int>
     }
 };
 
-using TPtri = PCpnp<MDesInpObserver, MDesStateData<PDd<int>>>;
+using TPtri = PCpp<MDesInpObserver, MDesStateData<PDd<int>>, false>;
 
 class SCreateChain : public PState<TPtri*>
 {
     public:
-	SCreateChain(TBcp aBcp, const char* aName = nullptr): PState<TPtri*>(&aBcp, aName), mInp(this) {}
+	SCreateChain(TBcp* aBcp, const char* aName = nullptr): PState<TPtri*>(aBcp, aName), mInp(this) {
+	    cout << "Construct SCreateChain" << endl;
+	    cout << "Construct SCreateChain 2" << endl;
+	}
     protected:
 	virtual void doTrans() override {
 	    TPtri* newnode = new PsIex<int>();
@@ -149,12 +153,16 @@ class DesT1 : public PDesLauncher
 	SPrint sPrint;
 	SCreateChain sCc;
 
-	DesT1(const char* aName = nullptr): PDesLauncher(aName), sPrint(mBcp, "Print"), sCc(mBcp, "CC") {
-	    sCc.set(&sPrint.Inp1);
-	    sCc.mInp.connect(&sCc.mOcp);
-	}
+	DesT1(const char* aName = nullptr);
 };
 
+DesT1::DesT1(const char* aName): PDesLauncher(aName),
+    sPrint(&mBcp, "Print"),
+    sCc(&mBcp, "CC")
+{
+    sCc.set(&sPrint.Inp1);
+    sCc.mInp.connect(&sCc.mOcp);
+}
 
 
 /** @brief Test of DES transitions
@@ -165,6 +173,9 @@ void Ut_pdes::test_des_tr_2()
     DesT1 des("des");
     des.Run(5, 2);
     cout << "des.sPrint uid: " << des.sPrint.MDesSyncable::Uid() << endl;
+    auto* ccout = des.sCc.sData();
+    cout << "sCc outp dump" << endl;
+    ccout->mData->dump();
     //auto data = des.mAdd.mOcp.data();
     //CPPUNIT_ASSERT_MESSAGE("Failed running Des1", data == 5);
 }

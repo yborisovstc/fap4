@@ -135,8 +135,19 @@
 	</sect2>
 	<sect2><title>Primary net node identification</title>
 	    <sect3><title>Intro</title>
-		<simpara>The nodes in primary net needs to be identified. This is ultimately required for the purpose of debugging and troubleshooting.</simpara>
+		<simpara>The nodes in primary net needs to be identified. This is ultimately required for the purpose of debugging and troubleshooting.
+		    Normally the ID shall be given by Provided, but there are many cases where Provided proxy is not set, extender for instance.
+		    In that case the solution is to have connpoint "local" ID.</simpara>
 		<simpara>Do we need unmodified id (const char*) or modifiable (std::string) ? For primary purpose unmodified ID is enough.</simpara>
+		<simpara>So in case of we introduce "local" Id we will have two IDs: local and provider ID. We need to have the rule of what ID to
+		    be used in case if both are set.</simpara>
+	    </sect3>
+	    <sect3><title>Why FAP3 native net doesn't need CPs ID?</title>
+		<sect4><title>Intro</title>
+		    <simpara>Indeed, there are similatiry betweenc fap3 native net and fap4 primary net. But fap3 native net doesn't neet CPs local ID. The
+			most valuable example of native net is IFR. But IFR even is not ID indexed. Nevetheless there aren't the problem with IFR debugging.
+		Right, this is because each IFR node has native hier element as provided.</simpara>
+		</sect4>
 	    </sect3>
 	</sect2>
 	<sect2><title>Shall primary net topology replicate native net structure?</title>
@@ -319,6 +330,46 @@
 	</sect2>
     </sect1>
 
+    <sect1 id="ds_tm"><title>Targeted mutation design</title>
+	<sect2><title>Intro</title>
+	    <simpara>Ref <xref linkend="ds_uc_001"/> for use-case</simpara>
+	</sect2>
+	<sect2><title>Outline</title>
+	    <sect3><title>Using owning net for distribute mutation</title>
+		<simpara>The idea is to use owning net to distribute mutation. In FAP3 there is dedicated iface MNode for mutations. Local IFR is used
+		    to obtain this iface from owned.</simpara>
+	    </sect3>
+	    <sect3><title>How to redirect targeted mutation?</title>
+		<sect4><title>Redirect the mut to all owneds. Owned to check if the mut is targeted for it.</title>
+		    <simpara>The simplest way is just to redirect the mut to all owneds so each owned can test if the mutation is targeted for it. This solution
+			is rather ineffective.</simpara>
+		    <simpara>It is also not fully logic to delegate the checking responsibility to owned. More logical would be that current node decide to what
+			owned to redirect.</simpara>
+		</sect4>
+	    </sect3>
+	</sect2>
+    </sect1>
+
+    <sect1 id="ds_uc"><title>Use-cases</title>
+	<sect2 id="ds_uc_001"><title>UC_001 Targeted mutation </title>
+	    <sect3><title>Intro</title>
+		<simpara>Ref <xref linkend="ds_tm"/> for design discussion.</simpara>
+	    </sect3>
+	    <sect3><title>Actors</title>
+		<itemizedlist>
+		    <listitem>MUT - mutation, actually targeted mutation (contains specification of target)</listitem>
+		    <listitem>NODE - "root" node that gets initial mutation</listitem>
+		    <listitem>NODE_OWD - "root" node direct owned</listitem>
+		    <listitem>TARG_NODE - target node for mutation</listitem>
+		</itemizedlist>
+	    </sect3>
+	    <sect3><title>Description</title>
+		<simpara>NODE Mutation input gets DES inp notification of MUT is updated - NODE "redirects" MUT to NODE_OWD that corresponds to MUT target ... -
+		    TARG_NODE gets DES inp notification of Mutation inp changed - TARG_NODE perform mutation.</simpara>
+	    </sect3>
+	</sect2>
+    </sect1>
+
     <sect1 id="ds_i"><title>Issues</title>
 	<sect2 id="ds_i_01"><title>[I_01] Active list is not updated when active syncable has been deleted.</title>
 	    <sect3><title>Description</title>
@@ -328,7 +379,6 @@
 	    </sect3>
 	</sect2>
     </sect1>
-
 
 
 </article>

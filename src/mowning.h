@@ -96,6 +96,47 @@ struct MNnOwning {
 	res &= mId.detach(&aPair.mId);
 	return res;
     }
+    auto ttr(int aa) -> int {
+	return 4;
+    }
+    std::string Id() const {
+	/*
+	auto* prov =  mId.provided();
+	std::string id;
+	auto idd = prov->sData();
+	*/
+	return std::string();
+    }
+    /*
+    template <typename T> std::enable_if<std::is_same<T, tag_outp>::value, std::string> getId()  {
+    }
+    template <typename T> std::enable_if<std::is_same<T, tag_inp>::value, std::string> getId()  {
+	return std::string();
+    }
+
+    std::string Id() {
+	return getId<Q>();
+    }
+    */
+    std::string getId(const tag_outp&)  {
+	std::string res;
+	// Assuming that direct pair provides the data
+	auto pairIt =  mId.binded()->pairsBegin();
+	if (pairIt != mId.binded()->pairsEnd()) {
+	    auto* pair = pairIt->second;
+	    auto* prov = pair->provided();
+	    auto* idd = prov->sData();
+	    res = idd->mData;
+	}
+	return res;
+    }
+
+    std::string getId(const tag_inp&)  {
+	return std::string();
+    }
+    std::string Id() {
+	return getId(Q());
+    }
 
     typename MPsEx<std::string, Q>::Tcp mId;
     typename MPsEx<GUri, P>::Tcp mUri;              //!< Owning URI, output
